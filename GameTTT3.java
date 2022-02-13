@@ -224,7 +224,6 @@ public class GameTTT3 {
         Scanner scanner = new Scanner(System.in);
         int[][] board = new int[SIZE][SIZE];
 
-        // setupBoard(scanner, board);
         gameControl(scanner, board);    // the menu loop controlling the game
     }
 
@@ -259,14 +258,14 @@ public class GameTTT3 {
 
                         drawEmptyBoard();
                         playGame(scanner, board, player1, player2); // game playing starts here!
-                        clearBoard(board);
+                        clearBoard(board);  // reset the board
 
                     } else {
                         System.out.println("Bad parameters!");
                     }
                 }
             } else if (strCommand.equals("exit")) {
-                break;  // break out the do-while loop, and game ends
+                break;  // break out of the do-while loop, and game ends
             } else {
                 System.out.println("Bad parameters!");
             }
@@ -400,8 +399,7 @@ public class GameTTT3 {
                     break;  // break out of the inner for loop
                 }
 
-                // need to break out of the outer for loop
-                if (!isBoardFull) {
+                if (!isBoardFull) { // need to break out of the outer for loop
                     break;
                 }
             }
