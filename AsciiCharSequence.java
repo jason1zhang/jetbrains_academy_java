@@ -4,7 +4,7 @@ import java.util.*;
  * Compact strings with AsciiCharSequence
  * @author Jason Zhang
  * @version 1.0
- * @since 2022-02-14
+ * @since 2022-02-15
  */
 
 /**
