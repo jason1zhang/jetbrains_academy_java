@@ -7,6 +7,9 @@ import java.util.Scanner;
  * @since 2022-02-16
  *  
  * Given a recursive method which should print an input string in the reverse order.
+ * 
+ * Note: sometimes, it's helpful to draw the call stack to understand the recursive calls, 
+ * and figure out the algorithm.
  */
 
 public class ReverseString {
