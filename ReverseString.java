@@ -11,7 +11,6 @@ import java.util.Scanner;
 
 public class ReverseString {
 
-    /* Fix this method */
     public static void printReverseCharByChar(String s) {
         if (s.length() > 0) {
             int last = s.length() - 1;
