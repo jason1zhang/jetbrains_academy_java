@@ -1,12 +1,26 @@
 // package tictactoe;
 
 import java.util.Scanner;
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
- * The 5th development stage of game tic-tac-toe.
+ * The 5th development stage of the game tic-tac-toe.
  *
- * Step 1: reimplement the game with OOP approach.
+ * Step 1: re-code the game with OOP approach, and pass the tests
+ *
+ * step 2: rewrite the program with the following sub-steps:
+ *    2.1: use 1D array to represent 2D board;
+ *    2.2: clean up the code to make it more compact and beautiful
+ *    2.3: pass the tests in the jetbrains academy again
+ *
+ * step 3: implement the hard level of robot player, using minimax algorithm
+ *  A Minimax algorithm can be best defined as a recursive function that does the following things:
+ *      1. return a value if a terminal state is found (+10, 0, -10)
+ *      2. go through available spots on the board
+ *      3. call the minimax function on each available spot (recursion)
+ *      4. evaluate returning values from function calls
+ *      5. and return the best value
  *
  * @author Jason Zhang
  * @version 1.0
@@ -20,32 +34,34 @@ public class GameTTT5 {
      * @param args string parameters from the command line
      */
     public static void main(String[] args) {
-        // write your code here
         Game game = new Game();
         game.start();
+        // game.testMiniMax();
     }
 }
+
 
 class Game {
     /**
      * Define the constants
      */
-    // number of cells in a row
+
+    // number of cells in a row on a sqaured board
     final static int SIZE = 3;
 
-    // which cell in the current position
-    final static int EMPTY_CELL = 0;
-    final static int X_CELL = 1;
-    final static int O_CELL = 2;
+    // cell type at the position
+    final static int CELL_EMPTY = 0;
+    final static int CELL_X = 1;
+    final static int CELL_O = 2;
 
     // game state
-    final static int INVALID = -1;
-    final static int DRAW = 0;
+    final static int INVALID = 0;
     final static int X_WIN = 1;
     final static int O_WIN = 2;
-    final static int NOT_FINISHED = 3;
+    final static int DRAW = 3;
+    final static int NOT_FINISHED = 4;
 
-    // who is playing now
+    // who is in the move now
     final static int ROBOT = 0;
     final static int HUMAN = 1;
 
@@ -53,25 +69,63 @@ class Game {
     final static int EASY = 0;
     final static int MEDIUM = 1;
     final static int HARD = 2;
-    static int player1Level = EASY; // initialize the level for robot 1 to be easy
-    static int player2Level = EASY; // initialize the level for robot 2 to be easy
 
-    // minmax function scores
-    final static int WIN_SCORE = 10;
-    final static int LOSS_SCORE = -10;
-    final static int DRAW_SCORE = 0;
+    // score for the minmax function
+    final static int SCORE_WIN = 10;
+    final static int SCORE_LOSS = -10;
+    final static int SCORE_DRAW = 0;
 
     /**
      * member variables
      */
-
-    private boolean isPlayer1Move; // who is moving now
-    private int fc; // keep track of the function calls of the minmax function
+    private boolean isPlayerOneMove;    // who is moving now
+    private int fc;                     // keep track of the function calls for the minimax function
+    private int state;                  // game state
 
     public Game() {
-        this.isPlayer1Move = true;
-        this.fc = 0;
+        resetGame();
     }
+
+    /**
+     * reset the game parameters
+     */
+    private void resetGame() {
+        this.isPlayerOneMove = true;
+        this.fc = 0;
+        this.state = INVALID;
+    }
+
+    /**
+     * test the functionality of minimaxMove method
+     */
+    public void testMiniMax() {
+        String strBoard = "O_XX_X_OO";
+        GameTTTBoard board = new GameTTTBoard(strBoard);
+
+        PlayerRobot playerOne = new PlayerRobot(); // default constructor: first player and easy level
+        PlayerHuman playerTwo = new PlayerHuman(); // default constructor: second player
+
+        for (Cell cell : board.getBoard()) {
+            switch(cell.getType()) {
+                case Game.CELL_X:
+                    playerOne.makeMove(new Move(0, cell));
+                    break;
+                case Game.CELL_O:
+                    playerTwo.makeMove(new Move(0, cell));
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // System.out.println("player one's moves: > " + playerOne.getMoves());
+        // System.out.println("player two's moves: > " + playerTwo.getMoves());
+
+        Move bestMove = playerOne.miniMaxMove(board, playerOne);
+        System.out.println("next best move: " + bestMove);
+    }
+
+
 
     /**
      * The main control loop of the game
@@ -79,10 +133,10 @@ class Game {
     protected void start() {
         Scanner scanner = new Scanner(System.in);
 
-        String strCommand; // command string: "start", "exit"
-        String strParam; // parameter string
-        Player player1 = null; // first player
-        Player player2 = null; // second player
+        String strCommand = null;   // command string: "start", "exit"
+        String strParam = null;     // parameter string after command
+        Player playerOne = null;    // first player
+        Player playerTwo = null;    // second player
 
         do {
             System.out.print("Input command: > ");
@@ -91,14 +145,13 @@ class Game {
             if (strCommand.equals("start")) {
                 strParam = scanner.nextLine();
 
-                // When using the method nextLine() to get the rest of the input, the array
-                // length
-                // is 3 in this case. And the first element of this array is " ".
+                // When using the method nextLine() to get the rest of the input,
+                // the array length is 3, aAnd the first element at index 0 in this array is " ".
                 String[] arrayParam = strParam.split(" ");
 
                 if (arrayParam.length != 3) {
                     System.out.println("Bad parameters!");
-                } else { // correct inputs and proceed the normal flow of the game
+                } else { // input correctly and proceed to the normal flow of the game
                     if (arrayParam[1].equals("easy") || arrayParam[1].equals("medium") ||
                             arrayParam[1].equals("hard") || arrayParam[1].equals("user") ||
                             arrayParam[2].equals("easy") || arrayParam[2].equals("medium") ||
@@ -106,46 +159,53 @@ class Game {
 
                         switch (arrayParam[1]) {
                             case "easy":
-                                player1 = new PlayerRobot(); // default constructor: first player and easy level
+                                playerOne = new PlayerRobot(); // default constructor: first player and easy level
                                 break;
                             case "medium":
-                                player1 = new PlayerRobot(Game.MEDIUM);
+                                playerOne = new PlayerRobot(Game.MEDIUM);
                                 break;
                             case "hard":
-                                player1 = new PlayerRobot(Game.HARD);
+                                playerOne = new PlayerRobot(Game.HARD);
                                 break;
                             case "user":
-                                player1 = new PlayerHuman(); // default constructor: first player
+                                playerOne = new PlayerHuman(); // default constructor: second player
                                 break;
                         }
 
                         switch (arrayParam[2]) {
                             case "easy":
-                                player2 = new PlayerRobot(false);
+                                playerTwo = new PlayerRobot(false);
                                 break;
                             case "medium":
-                                player2 = new PlayerRobot(false, Game.MEDIUM);
+                                playerTwo = new PlayerRobot(false, Game.MEDIUM);
                                 break;
                             case "hard":
-                                player2 = new PlayerRobot(false, Game.HARD);
+                                playerTwo = new PlayerRobot(false, Game.HARD);
                                 break;
                             case "user":
-                                player2 = new PlayerHuman();
-                                ;
+                                playerTwo = new PlayerHuman(false);
                                 break;
                         }
 
                         GameTTTBoard board = new GameTTTBoard();
                         board.draw(scanner); // draw the empty board
-                        play(scanner, board, player1, player2); // game playing starts here!
-                        board.clear(); // reset the board
+
+                        play(scanner, board, playerOne, playerTwo); // game starts here!
+
+                        board.clear();  // reset the board
+                        resetGame();    // reset the game parameters
+
+                        strCommand = null;
+                        strParam = null;
+                        playerOne = null;
+                        playerTwo = null;
 
                     } else {
                         System.out.println("Bad parameters!");
                     }
                 }
             } else if (strCommand.equals("exit")) {
-                break; // break out of the do-while loop, and game ends
+                break; // break out of the do-while loop, and end the game
             } else {
                 System.out.println("Bad parameters!");
             }
@@ -155,32 +215,26 @@ class Game {
     }
 
     /**
-     * The game logic
+     * The game main logic
      *
      * @param scanner java.util.Scanner
      * @param board   game board
-     * @param player1 the first player
-     * @param player2 the second player
+     * @param playerOne the first player
+     * @param playerTwo the second player
      */
-    private void play(Scanner scanner, Board board, Player player1, Player player2) {
-        int state = INVALID; // initialize the game state
-
+    private void play(Scanner scanner, GameTTTBoard board, Player playerOne, Player playerTwo) {
         // infinite loop until one side win or draw
         while (true) {
-            // System.out.println("*** " + player1 + "***");
-
-            if (this.isPlayer1Move) {
-                player1.MoveNext(scanner, board);
+            if (this.isPlayerOneMove) {
+                playerOne.MoveNext(scanner, board);
             } else {
-                // System.out.println("*** " + player2 + "***");
-
-                player2.MoveNext(scanner, board);
+                playerTwo.MoveNext(scanner, board);
             }
-            
+
             board.draw(scanner);
 
-            state = checkState(board, player1, player2); // check game state
-            switch (state) {
+            this.state = checkState(board, playerOne, playerTwo); // check game state
+            switch (this.state) {
                 case X_WIN:
                     System.out.println("X wins");
                     return;
@@ -191,62 +245,26 @@ class Game {
                     System.out.println("Draw");
                     return;
                 case NOT_FINISHED:
-                    isPlayer1Move = !isPlayer1Move; // continue playing the game by switching the side
+                    isPlayerOneMove = !isPlayerOneMove; // continue playing the game by switching the side
                     break;
             }
         }
     }
 
     /**
-     * check who wins the game
-     * 
-     * @param board  game board
-     * @param player player to check
-     * @return true if wins otherwise false
-     */
-    private boolean checkWin(Board board, Player player) {
-        // System.out.printf("*** board -> (%s), player -> (%d) *** \n",
-        // Arrays.toString(board), player);
-        board.boardConversion();
-        Cell[] board_1d = board.getBoard1d();
-        int playerType = player.getCell().getType();
-
-        return (board_1d[0].getType() == playerType && board_1d[1].getType() == playerType
-                && board_1d[2].getType() == playerType) ||
-                (board_1d[3].getType() == playerType && board_1d[4].getType() == playerType
-                        && board_1d[5].getType() == playerType)
-                ||
-                (board_1d[6].getType() == playerType && board_1d[7].getType() == playerType
-                        && board_1d[8].getType() == playerType)
-                ||
-                (board_1d[0].getType() == playerType && board_1d[3].getType() == playerType
-                        && board_1d[6].getType() == playerType)
-                ||
-                (board_1d[1].getType() == playerType && board_1d[4].getType() == playerType
-                        && board_1d[7].getType() == playerType)
-                ||
-                (board_1d[2].getType() == playerType && board_1d[5].getType() == playerType
-                        && board_1d[8].getType() == playerType)
-                ||
-                (board_1d[0].getType() == playerType && board_1d[4].getType() == playerType
-                        && board_1d[8].getType() == playerType)
-                ||
-                (board_1d[2].getType() == playerType && board_1d[4].getType() == playerType
-                        && board_1d[6].getType() == playerType);
-    }
-
-    /**
      * check the game state
      *
      * @param board game board
+     * @param playerOne first player 'X'
+     * @param playerTwo second player 'O'
      * @return game state
      */
-    private int checkState(Board board, Player player1, Player player2) {
-        if (checkWin(board, player1)) {
+    private int checkState(GameTTTBoard board, Player playerOne, Player playerTwo) {
+        if (board.checkWin(playerOne)) {
             return X_WIN;
         }
 
-        if (checkWin(board, player2)) {
+        if (board.checkWin(playerTwo)) {
             return O_WIN;
         }
 
@@ -254,41 +272,42 @@ class Game {
 
         for (int row = 0; row < SIZE; row++) {
             for (int col = 0; col < SIZE; col++) {
-                if (board.getBoard2d()[row][col].getType() == Game.EMPTY_CELL) {
+                if (board.getBoard()[row * SIZE + col].getType() == CELL_EMPTY) {
                     isBoardFull = false;
                     break; // break out of the inner for loop
                 }
 
-                if (!isBoardFull) { // need to break out of the outer for loop
+                if (!isBoardFull) { // break out of the outer for loop
                     break;
                 }
             }
         }
 
-        return isBoardFull ? DRAW : NOT_FINISHED;
+        return isBoardFull? DRAW : NOT_FINISHED;
     }
 }
 
-abstract class Player {
+abstract class Player implements Cloneable{
     protected boolean isFirst; // first player flag
-    protected Cell cell;
-    protected Move currMove;
+    protected int type;
+    protected Move curMove;
     protected Move nextMove;
+    protected ArrayList<Move> moves;
 
     public Player() {
         this.isFirst = true;
-        this.cell = new Cell(Game.X_CELL);
-
-        this.currMove = null;
-        this.nextMove = null;
+        this.type = Game.CELL_X;
+        this.curMove = new Move();
+        this.nextMove = new Move();
+        this.moves = new ArrayList<Move>();
     }
 
     public Player(boolean isFirst) {
         this.isFirst = isFirst;
-        this.cell = isFirst ? new Cell(Game.X_CELL) : new Cell(Game.O_CELL);
-        this.currMove = null;
-        this.nextMove = null;
-
+        this.type = isFirst ? Game.CELL_X : Game.CELL_O;
+        this.curMove = new Move();
+        this.nextMove = new Move();
+        this.moves = new ArrayList<Move>();
     }
 
     public boolean isFirst() {
@@ -299,29 +318,84 @@ abstract class Player {
         this.isFirst = isFirst;
     }
 
-    public Cell getCell() {
-        return this.cell;
+    public int getType() {
+        return this.type;
     }
 
-    public void setCell(Cell cell) {
-        this.cell = cell;
+    public void setType(int type) {
+        this.type = type;
     }
 
-    public Move getCurrMove() {
-        return this.currMove;
+    public Move getCurMove() {
+        return this.curMove;
     }
 
-    // @Override
-    public String to_String() {
-        return this.isFirst ? "player1" : "player2";
+    public void setCurMove(Move move) {
+        this.curMove = (Move) move.clone();
     }
 
-    abstract protected void MoveNext(Scanner scanner, Board board);
+    /**
+     * Get the opponent's type     *
+     * @return the opponent's type
+     */
+    public int getOppType() {
+        switch (this.type) {
+            case Game.CELL_X:
+                return Game.CELL_O;
+            case Game.CELL_O:
+                return Game.CELL_X;
+            default:
+                return Game.CELL_EMPTY;
+        }
+    }
+
+    public ArrayList<Move> getMoves() {
+        return this.moves;
+    }
+
+    /**
+     * player make one move
+     * @param move current move
+     */
+    public void makeMove(Move move) {
+        this.curMove = move;
+        this.moves.add(move);
+    }
+
+    @Override
+    public String toString() {
+        String player = this.isFirst ? "playerOne" : "playerTwo";
+        return player + " at " + this.curMove;
+    }
+
+    /**
+     * implement deep clone
+     * @return the cloned cell ojbect
+     */
+    public Object clone() {
+        Player copy = null;
+
+        try {
+            copy = (Player) super.clone();
+            copy.curMove = (Move) this.curMove.clone();
+            copy.nextMove = (Move) this.nextMove.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        return copy;
+    }
+
+    abstract protected void MoveNext(Scanner scanner, GameTTTBoard board);
 }
 
 class PlayerHuman extends Player {
     public PlayerHuman() {
         super();
+    }
+
+    public PlayerHuman(boolean isFirst) {
+        super(isFirst);
     }
 
     @Override
@@ -331,7 +405,7 @@ class PlayerHuman extends Player {
      * @param scanner java.util.Scanner
      * @param board   game board
      */
-    protected void MoveNext(Scanner scanner, Board board) {
+    protected void MoveNext(Scanner scanner, GameTTTBoard board) {
         int row; // x coordinate
         int col; // y coordinate
 
@@ -363,11 +437,14 @@ class PlayerHuman extends Player {
                 continue;
             }
 
-            if (board.getBoard2d()[row][col].getType() != Game.EMPTY_CELL) {
+            if (board.getBoard()[row * Game.SIZE + col].getType() != Game.CELL_EMPTY) {
                 System.out.println("This cell is occupied! Choose another one!");
             } else {
-                Cell cell = this.isFirst() ? new Cell(row, col, Game.X_CELL) : new Cell(row, col, Game.O_CELL);
-                board.getBoard2d()[row][col] = cell;
+                Cell cell = this.isFirst() ? new Cell(row, col, Game.CELL_X) : new Cell(row, col, Game.CELL_O);
+                board.getBoard()[row * Game.SIZE + col] = cell;
+
+                moves.add(new Move(0, cell));
+
                 break; // break out of the while loop when human enters the valid move
             }
         }
@@ -398,7 +475,7 @@ class PlayerRobot extends Player {
     }
 
     @Override
-    protected void MoveNext(Scanner scanner, Board board) {
+    protected void MoveNext(Scanner scanner, GameTTTBoard board) {
         switch (this.level) {
             case Game.EASY:
                 System.out.println("Making move level \"easy\"");
@@ -407,6 +484,10 @@ class PlayerRobot extends Player {
             case Game.MEDIUM:
                 System.out.println("Making move level \"medium\"");
                 MoveNextMedium(scanner, board);
+                break;
+            case Game.HARD:
+                System.out.println("Making move level \"hard\"");
+                MoveNextHard(scanner, board);
                 break;
         }
     }
@@ -417,7 +498,7 @@ class PlayerRobot extends Player {
      * @param scanner java.util.Scanner
      * @param board   game board
      */
-    private void MoveNextEasy(Scanner scanner, Board board) {
+    private void MoveNextEasy(Scanner scanner, GameTTTBoard board) {
         Random rand = new Random();
         int row;
         int col;
@@ -426,627 +507,640 @@ class PlayerRobot extends Player {
         do {
             row = rand.nextInt(board.getSize());
             col = rand.nextInt(board.getSize());
-        } while (board.getBoard2d()[row][col].getType() != Game.EMPTY_CELL);
+        } while (board.getBoard()[row * Game.SIZE + col].getType() != Game.CELL_EMPTY);
 
-        Cell cell = this.isFirst ? new Cell(row, col, Game.X_CELL) : new Cell(row, col, Game.O_CELL);
-        this.nextMove = new Move(cell);
-        board.getBoard2d()[row][col] = cell; // make the robot move
+        Cell cell = this.isFirst ? new Cell(row, col, Game.CELL_X) : new Cell(row, col, Game.CELL_O);
+        // this.nextMove = new Move(cell);
+        board.getBoard()[row * Game.SIZE + col] = cell; // make the robot move
+
+        moves.add(new Move(0, cell));
     }
 
     /**
      * robot makes the move at the medium level
-     * 
+     *
      * @param scanner java.util.Scanner
      * @param board   game board
      */
-    private void MoveNextMedium(Scanner scanner, Board board) {
-        Cell oppCell = isFirst() ? new Cell(Game.O_CELL) : new Cell(Game.X_CELL); // opponent player
+    private void MoveNextMedium(Scanner scanner, GameTTTBoard board) {
+        Cell oppCell = isFirst() ? new Cell(Game.CELL_O) : new Cell(Game.CELL_X); // opponent player
 
         /**
          * If it already has two in a row and can win with one further move, it does so.
          */
         // check the first row
-        if (board.getBoard2d()[0][0].getType() == getCell().getType() &&
-                board.getBoard2d()[0][1].getType() == getCell().getType() &&
-                board.getBoard2d()[0][2].getType() == Game.EMPTY_CELL) {
+        if (board.getBoard()[0].getType() == getType() &&
+                board.getBoard()[1].getType() == getType() &&
+                board.getBoard()[2].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(0, 2, Game.X_CELL) : new Cell(0, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 2, Game.CELL_X) : new Cell(0, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[2] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][0].getType() == getCell().getType() &&
-                board.getBoard2d()[0][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[0][2].getType() == getCell().getType()) {
+        else if (board.getBoard()[0].getType() == getType() &&
+                board.getBoard()[1].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[2].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 1, Game.X_CELL) : new Cell(0, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 1, Game.CELL_X) : new Cell(0, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[1] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][0].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[0][1].getType() == getCell().getType() &&
-                board.getBoard2d()[0][2].getType() == getCell().getType()) {
+        else if (board.getBoard()[0].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[1].getType() == getType() &&
+                board.getBoard()[2].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 0, Game.X_CELL) : new Cell(0, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 0, Game.CELL_X) : new Cell(0, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[0] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         // check the second row
-        if (board.getBoard2d()[1][0].getType() == getCell().getType() &&
-                board.getBoard2d()[1][1].getType() == getCell().getType() &&
-                board.getBoard2d()[1][2].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[3].getType() == getType() &&
+                board.getBoard()[4].getType() == getType() &&
+                board.getBoard()[5].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(1, 2, Game.X_CELL) : new Cell(1, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 2, Game.CELL_X) : new Cell(1, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[5] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[1][0].getType() == getCell().getType() &&
-                board.getBoard2d()[1][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][2].getType() == getCell().getType()) {
+        else if (board.getBoard()[3].getType() == getType() &&
+                board.getBoard()[4].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[5].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 1, Game.X_CELL) : new Cell(1, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[4] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[1][0].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][1].getType() == getCell().getType() &&
-                board.getBoard2d()[1][2].getType() == getCell().getType()) {
+        else if (board.getBoard()[3].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[4].getType() == getType() &&
+                board.getBoard()[5].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 0, Game.X_CELL) : new Cell(1, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 0, Game.CELL_X) : new Cell(1, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[3] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         // check the third row
-        if (board.getBoard2d()[2][0].getType() == getCell().getType() &&
-                board.getBoard2d()[2][1].getType() == getCell().getType() &&
-                board.getBoard2d()[2][2].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[6].getType() == getType() &&
+                board.getBoard()[7].getType() == getType() &&
+                board.getBoard()[8].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(2, 2, Game.X_CELL) : new Cell(2, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 2, Game.CELL_X) : new Cell(2, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[8] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[2][0].getType() == getCell().getType() &&
-                board.getBoard2d()[2][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][2].getType() == getCell().getType()) {
+        else if (board.getBoard()[6].getType() == getType() &&
+                board.getBoard()[7].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[8].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(2, 1, Game.X_CELL) : new Cell(2, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 1, Game.CELL_X) : new Cell(2, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[7] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[2][0].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][1].getType() == getCell().getType() &&
-                board.getBoard2d()[2][2].getType() == getCell().getType()) {
+        else if (board.getBoard()[6].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[7].getType() == getType() &&
+                board.getBoard()[8].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(2, 0, Game.X_CELL) : new Cell(2, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 0, Game.CELL_X) : new Cell(2, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[6] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         // check the first col
-        if (board.getBoard2d()[0][0].getType() == getCell().getType() &&
-                board.getBoard2d()[1][0].getType() == getCell().getType() &&
-                board.getBoard2d()[2][0].getType() == Game.EMPTY_CELL) {
+        if (board.getBoard()[0].getType() == getType() &&
+                board.getBoard()[3].getType() == getType() &&
+                board.getBoard()[6].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(2, 0, Game.X_CELL) : new Cell(2, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 0, Game.CELL_X) : new Cell(2, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[6] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][0].getType() == getCell().getType() &&
-                board.getBoard2d()[1][0].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][0].getType() == getCell().getType()) {
+        else if (board.getBoard()[0].getType() == getType() &&
+                board.getBoard()[3].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[6].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 0, Game.X_CELL) : new Cell(1, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 0, Game.CELL_X) : new Cell(1, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[3] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][0].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][0].getType() == getCell().getType() &&
-                board.getBoard2d()[2][0].getType() == getCell().getType()) {
+        else if (board.getBoard()[0].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[3].getType() == getType() &&
+                board.getBoard()[6].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 0, Game.X_CELL) : new Cell(0, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 0, Game.CELL_X) : new Cell(0, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[0] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         // check the second col
-        if (board.getBoard2d()[0][1].getType() == getCell().getType() &&
-                board.getBoard2d()[1][1].getType() == getCell().getType() &&
-                board.getBoard2d()[2][1].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[1].getType() == getType() &&
+                board.getBoard()[4].getType() == getType() &&
+                board.getBoard()[7].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(2, 1, Game.X_CELL) : new Cell(2, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 1, Game.CELL_X) : new Cell(2, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[7] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][1].getType() == getCell().getType() &&
-                board.getBoard2d()[1][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][1].getType() == getCell().getType()) {
+        else if (board.getBoard()[1].getType() == getType() &&
+                board.getBoard()[4].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[7].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 1, Game.X_CELL) : new Cell(1, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[4] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][1].getType() == getCell().getType() &&
-                board.getBoard2d()[2][1].getType() == getCell().getType()) {
+        else if (board.getBoard()[1].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[4].getType() == getType() &&
+                board.getBoard()[7].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 1, Game.X_CELL) : new Cell(0, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 1, Game.CELL_X) : new Cell(0, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[1] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         // check the third col
-        if (board.getBoard2d()[0][2].getType() == getCell().getType() &&
-                board.getBoard2d()[1][2].getType() == getCell().getType() &&
-                board.getBoard2d()[2][2].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[2].getType() == getType() &&
+                board.getBoard()[5].getType() == getType() &&
+                board.getBoard()[8].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(2, 2, Game.X_CELL) : new Cell(2, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 2, Game.CELL_X) : new Cell(2, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[8] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][2].getType() == getCell().getType() &&
-                board.getBoard2d()[1][2].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][2].getType() == getCell().getType()) {
+        else if (board.getBoard()[2].getType() == getType() &&
+                board.getBoard()[5].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[8].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 2, Game.X_CELL) : new Cell(1, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 2, Game.CELL_X) : new Cell(1, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[5] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][2].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][2].getType() == getCell().getType() &&
-                board.getBoard2d()[2][2].getType() == getCell().getType()) {
+        else if (board.getBoard()[2].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[5].getType() == getType() &&
+                board.getBoard()[8].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 2, Game.X_CELL) : new Cell(0, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 2, Game.CELL_X) : new Cell(0, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[2] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         // check the diagonal
-        if (board.getBoard2d()[0][0].getType() == getCell().getType() &&
-                board.getBoard2d()[1][1].getType() == getCell().getType() &&
-                board.getBoard2d()[2][2].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[0].getType() == getType() &&
+                board.getBoard()[4].getType() == getType() &&
+                board.getBoard()[8].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(2, 2, Game.X_CELL) : new Cell(2, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 2, Game.CELL_X) : new Cell(2, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[8] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][0].getType() == getCell().getType() &&
-                board.getBoard2d()[1][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][2].getType() == getCell().getType()) {
+        else if (board.getBoard()[0].getType() == getType() &&
+                board.getBoard()[4].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[8].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 1, Game.X_CELL) : new Cell(1, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[4] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][0].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][1].getType() == getCell().getType() &&
-                board.getBoard2d()[2][2].getType() == getCell().getType()) {
+        else if (board.getBoard()[0].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[4].getType() == getType() &&
+                board.getBoard()[8].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 0, Game.X_CELL) : new Cell(0, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 0, Game.CELL_X) : new Cell(0, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[0] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         // check the reverse diagonal
-        if (board.getBoard2d()[0][2].getType() == getCell().getType() &&
-                board.getBoard2d()[1][1].getType() == getCell().getType() &&
-                board.getBoard2d()[2][0].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[2].getType() == getType() &&
+                board.getBoard()[4].getType() == getType() &&
+                board.getBoard()[6].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(2, 0, Game.X_CELL) : new Cell(2, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 0, Game.CELL_X) : new Cell(2, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[6] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][2].getType() == getCell().getType() &&
-                board.getBoard2d()[1][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][0].getType() == getCell().getType()) {
+        else if (board.getBoard()[2].getType() == getType() &&
+                board.getBoard()[4].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[6].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 1, Game.X_CELL) : new Cell(1, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[4] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][2].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][1].getType() == getCell().getType() &&
-                board.getBoard2d()[2][0].getType() == getCell().getType()) {
+        else if (board.getBoard()[2].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[4].getType() == getType() &&
+                board.getBoard()[6].getType() == getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 2, Game.X_CELL) : new Cell(0, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 2, Game.CELL_X) : new Cell(0, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[2] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         /**
-         * If its opponent can win with one move, it plays the move necessary to block
-         * this.
+         * If its opponent can win with one move, it plays the move necessary to block this.
          */
         // check the first row
-        if (board.getBoard2d()[0][0].getType() == oppCell.getType() &&
-                board.getBoard2d()[0][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[0][2].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[0].getType() == oppCell.getType() &&
+                board.getBoard()[1].getType() == oppCell.getType() &&
+                board.getBoard()[2].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(0, 2, Game.X_CELL) : new Cell(0, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 2, Game.CELL_X) : new Cell(0, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[2] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][0].getType() == oppCell.getType() &&
-                board.getBoard2d()[0][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[0][2].getType() == oppCell.getType()) {
+        else if (board.getBoard()[0].getType() == oppCell.getType() &&
+                board.getBoard()[1].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[2].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 1, Game.X_CELL) : new Cell(0, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 1, Game.CELL_X) : new Cell(0, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[1] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][0].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[0][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[0][2].getType() == oppCell.getType()) {
+        else if (board.getBoard()[0].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[1].getType() == oppCell.getType() &&
+                board.getBoard()[2].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 0, Game.X_CELL) : new Cell(0, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 0, Game.CELL_X) : new Cell(0, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[0] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         // check the second row
-        if (board.getBoard2d()[1][0].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][2].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[3].getType() == oppCell.getType() &&
+                board.getBoard()[4].getType() == oppCell.getType() &&
+                board.getBoard()[5].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(1, 2, Game.X_CELL) : new Cell(1, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 2, Game.CELL_X) : new Cell(1, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[5] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[1][0].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][2].getType() == oppCell.getType()) {
+        else if (board.getBoard()[3].getType() == oppCell.getType() &&
+                board.getBoard()[4].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[5].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 1, Game.X_CELL) : new Cell(1, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[4] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[1][0].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][2].getType() == oppCell.getType()) {
+        else if (board.getBoard()[3].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[4].getType() == oppCell.getType() &&
+                board.getBoard()[5].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 0, Game.X_CELL) : new Cell(1, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 0, Game.CELL_X) : new Cell(1, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[3] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         // check the third row
-        if (board.getBoard2d()[2][0].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][2].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[6].getType() == oppCell.getType() &&
+                board.getBoard()[7].getType() == oppCell.getType() &&
+                board.getBoard()[8].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(2, 2, Game.X_CELL) : new Cell(2, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 2, Game.CELL_X) : new Cell(2, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[8] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[2][0].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][2].getType() == oppCell.getType()) {
+        else if (board.getBoard()[6].getType() == oppCell.getType() &&
+                board.getBoard()[7].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[8].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(2, 1, Game.X_CELL) : new Cell(2, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 1, Game.CELL_X) : new Cell(2, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[7] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[2][0].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][2].getType() == oppCell.getType()) {
+        else if (board.getBoard()[6].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[7].getType() == oppCell.getType() &&
+                board.getBoard()[8].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(2, 0, Game.X_CELL) : new Cell(2, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 0, Game.CELL_X) : new Cell(2, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[6] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         // check the first col
-        if (board.getBoard2d()[0][0].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][0].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][0].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[0].getType() == oppCell.getType() &&
+                board.getBoard()[3].getType() == oppCell.getType() &&
+                board.getBoard()[6].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(2, 0, Game.X_CELL) : new Cell(2, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 0, Game.CELL_X) : new Cell(2, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[6] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][0].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][0].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][0].getType() == oppCell.getType()) {
+        else if (board.getBoard()[0].getType() == oppCell.getType() &&
+                board.getBoard()[3].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[6].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 0, Game.X_CELL) : new Cell(1, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 0, Game.CELL_X) : new Cell(1, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[3] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][0].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][0].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][0].getType() == oppCell.getType()) {
+        else if (board.getBoard()[0].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[3].getType() == oppCell.getType() &&
+                board.getBoard()[6].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 0, Game.X_CELL) : new Cell(0, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 0, Game.CELL_X) : new Cell(0, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[0] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         // check the second col
-        if (board.getBoard2d()[0][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][1].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[1].getType() == oppCell.getType() &&
+                board.getBoard()[4].getType() == oppCell.getType() &&
+                board.getBoard()[7].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(2, 1, Game.X_CELL) : new Cell(2, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 1, Game.CELL_X) : new Cell(2, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[7] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][1].getType() == oppCell.getType()) {
+        else if (board.getBoard()[1].getType() == oppCell.getType() &&
+                board.getBoard()[4].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[7].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 1, Game.X_CELL) : new Cell(1, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[4] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][1].getType() == oppCell.getType()) {
+        else if (board.getBoard()[1].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[4].getType() == oppCell.getType() &&
+                board.getBoard()[7].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 1, Game.X_CELL) : new Cell(0, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 1, Game.CELL_X) : new Cell(0, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[1] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         // check the third col
-        if (board.getBoard2d()[0][2].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][2].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][2].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[2].getType() == oppCell.getType() &&
+                board.getBoard()[5].getType() == oppCell.getType() &&
+                board.getBoard()[8].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(2, 2, Game.X_CELL) : new Cell(2, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 2, Game.CELL_X) : new Cell(2, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[8] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][2].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][2].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][2].getType() == oppCell.getType()) {
+        else if (board.getBoard()[2].getType() == oppCell.getType() &&
+                board.getBoard()[5].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[8].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 2, Game.X_CELL) : new Cell(1, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 2, Game.CELL_X) : new Cell(1, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[5] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][2].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][2].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][2].getType() == oppCell.getType()) {
+        else if (board.getBoard()[2].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[5].getType() == oppCell.getType() &&
+                board.getBoard()[8].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 2, Game.X_CELL) : new Cell(0, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 2, Game.CELL_X) : new Cell(0, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[2] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
 
         // check the diagonal
-        if (board.getBoard2d()[0][0].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][2].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[0].getType() == oppCell.getType() &&
+                board.getBoard()[4].getType() == oppCell.getType() &&
+                board.getBoard()[8].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(2, 2, Game.X_CELL) : new Cell(2, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 2, Game.CELL_X) : new Cell(2, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[8] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][0].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][2].getType() == oppCell.getType()) {
+        else if (board.getBoard()[0].getType() == oppCell.getType() &&
+                board.getBoard()[4].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[8].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 1, Game.X_CELL) : new Cell(1, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[4] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][0].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][2].getType() == oppCell.getType()) {
+        else if (board.getBoard()[0].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[4].getType() == oppCell.getType() &&
+                board.getBoard()[8].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 0, Game.X_CELL) : new Cell(0, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 0, Game.CELL_X) : new Cell(0, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[0] = cell; // make the robot move
+            moves.add(new Move(0, cell));
         }
 
         // check the reverse diagonal
-        if (board.getBoard2d()[0][2].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][0].getType() == Game.EMPTY_CELL) {
+        else if (board.getBoard()[2].getType() == oppCell.getType() &&
+                board.getBoard()[4].getType() == oppCell.getType() &&
+                board.getBoard()[6].getType() == Game.CELL_EMPTY) {
 
-            Cell cell = this.isFirst ? new Cell(2, 0, Game.X_CELL) : new Cell(2, 0, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[2][0] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(2, 0, Game.CELL_X) : new Cell(2, 0, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[6] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][2].getType() == oppCell.getType() &&
-                board.getBoard2d()[1][1].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[2][0].getType() == oppCell.getType()) {
+        else if (board.getBoard()[2].getType() == oppCell.getType() &&
+                board.getBoard()[4].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[6].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(1, 1, Game.X_CELL) : new Cell(1, 1, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[1][1] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[4] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
         }
-        if (board.getBoard2d()[0][2].getType() == Game.EMPTY_CELL &&
-                board.getBoard2d()[1][1].getType() == oppCell.getType() &&
-                board.getBoard2d()[2][0].getType() == oppCell.getType()) {
+        else if (board.getBoard()[2].getType() == Game.CELL_EMPTY &&
+                board.getBoard()[4].getType() == oppCell.getType() &&
+                board.getBoard()[6].getType() == oppCell.getType()) {
 
-            Cell cell = this.isFirst ? new Cell(0, 2, Game.X_CELL) : new Cell(0, 2, Game.O_CELL);
-            this.nextMove = new Move(cell);
-            board.getBoard2d()[0][2] = cell; // make the robot move
-            return;
+            Cell cell = this.isFirst ? new Cell(0, 2, Game.CELL_X) : new Cell(0, 2, Game.CELL_O);
+            // this.nextMove = new Move(cell);
+            board.getBoard()[2] = cell; // make the robot move
+
+            moves.add(new Move(0, cell));
+        } else {
+            MoveNextEasy(scanner, board); // Otherwise, it makes a easy random move.
         }
-
-        MoveNextEasy(scanner, board); // Otherwise, it makes a random move.
     }
 
     /**
-     * robot makes the move
+     * robot makes the move at the hard level
      *
-     * @param board  game board
-     * 
-     *               private void robotMove(int[][] board) {
-     *               if (player1Level == HARD && isFirstPlayerMove || player2Level
-     *               == HARD && !isFirstPlayerMove) {
-     *               System.out.println("Making move level \"hard\"");
-     * 
-     *               robotMoveHard(board);
-     * 
-     *               } else if (player1Level == MEDIUM && isFirstPlayerMove ||
-     *               player2Level == MEDIUM && !isFirstPlayerMove) {
-     *               System.out.println("Making move level \"medium\"");
-     * 
-     *               if (!robotMoveMedium(board)) {
-     *               robotMoveEasy(board); // Otherwise, it makes a random move.
-     *               }
-     * 
-     *               } else {
-     *               System.out.println("Making move level \"easy\"");
-     *               robotMoveEasy(board);
-     *               }
-     *               }
-     * 
-     *               robot makes the move at the hard level
-     *
-     * @param board  game board
-     * 
-     *               private void MoveNextHard(int[][] board) {
-     *               // finding the ultimate play on the game that favors the
-     *               computer
-     *               Move bestSpot = minMaxMove(boardConversion(board), ROBOT);
-     * 
-     *               System.out.printf("bestSpot's index -> (%d)\n",
-     *               bestSpot.index);
-     * 
-     *               int row = bestSpot.index / SIZE;
-     *               int col = row * SIZE + bestSpot.index % SIZE;
-     *               board[row][col] = isFirstPlayerMove ? XCELL : OCELL; // make
-     *               the robot move
-     *               }
-     * 
-     *               /**
-     *               the main minmax function
-     *
-     * @param board  game board
-     * @param player current player: ROBOT or HUMAN
-     * 
-     *               private Move minMaxMove(int[] board, int player) {
-     *               String availSpots = emptyIndexies(board);
-     * 
-     *               System.out.printf("*** availSpots -> (%s) ***\n", availSpots);
-     * 
-     *               // an array to collect all the moves
-     *               LinkedList<Move> moves = new LinkedList<>();
-     * 
-     *               // checks for the terminal states such as win, lose, and draw
-     *               // and returning a value accordingly
-     *               if (checkWin(board, HUMAN)) {
-     *               System.out.println("*** checkWin -> Human ***");
-     *               return new Move(LOSS_SCORE);
-     *               } else if (checkWin(board, ROBOT)) {
-     *               System.out.println("*** checkWin -> ROBOT ***");
-     *               return new Move(WIN_SCORE);
-     *               } else if (availSpots.length() == 0) {
-     *               System.out.println("*** checkWin -> DRAW ***");
-     *               return new Move(DRAW_SCORE);
-     *               }
-     * 
-     *               // loop through available spots
-     *               for (char spot : availSpots.toCharArray()) {
-     *               //create an object for each and store the index of that spot
-     *               // that was stored as a number in the object's index key
-     *               Move move = new Move();
-     *               move.index = board[spot - '0'];
-     * 
-     *               System.out.printf("*** move.index -> (%d) ***\n", move.index);
-     * 
-     *               // set the empty spot to the current player
-     *               board[spot - '0'] = player;
-     * 
-     *               // collect the score resulted from calling minimax on the
-     *               opponent of the current player
-     *               Move result;
-     *               if (player == ROBOT) {
-     *               result = minMaxMove(board, HUMAN);
-     * 
-     *               } else {
-     *               result = minMaxMove(board, ROBOT);
-     *               }
-     *               move.score = result.score;
-     * 
-     *               //reset the spot to empty
-     *               board[spot - '0'] = move.index;
-     * 
-     *               // push the object to the linkedlist
-     *               moves.push(move);
-     *               }
-     * 
-     *               // if it is the computer's turn loop over the moves and choose
-     *               the move with the highest score
-     *               Move bestMove = new Move();
-     *               if (player == ROBOT) {
-     *               int bestScore = -10000;
-     *               for (Move move : moves) {
-     *               if (move.score > bestScore) {
-     *               bestScore = move.score;
-     *               bestMove = move;
-     *               }
-     *               }
-     *               } else { // else loop over the moves and choose the move with
-     *               the lowest score
-     *               int bestScore = 10000;
-     *               for (Move move : moves) {
-     *               if (move.score < bestScore) {
-     *               bestScore = move.score;
-     *               bestMove = move;
-     *               }
-     *               }
-     *               }
-     * 
-     *               // return the chosen move (object) from the array to the higher
-     *               depth
-     *               return bestMove;
-     *               }
+     * @param scanner java.util.Scanner
+     * @param board   game board
      */
+    private void MoveNextHard(Scanner scanner, GameTTTBoard board) {
+        // finding the ultimate move that favors the computer
+        Move bestMove = miniMaxMove(board, this);
+
+        int row = bestMove.getCell().getRow();
+        int col = bestMove.getCell().getCol();
+
+        Cell cell = this.isFirst? new Cell(row, col, Game.CELL_X) : new Cell(row, col, Game.CELL_O);
+        // this.nextMove = new Move(cell);
+        board.getBoard()[row * Game.SIZE + col] = cell; // make the robot move
+    }
+
+    /**
+     * Implement the minimax algorithm to find the next best move
+     *
+     * @param board  game board
+     * @param player current player
+     * @return next best move
+     */
+    public Move miniMaxMove(GameTTTBoard board, Player player) {
+        ArrayList<Cell> emptyCells = board.getEmptyCells();
+        ArrayList<Move> moves = new ArrayList<>(); // an array to collect all the moves
+
+        // checks for the terminal states such as win, lose, and draw and returning a correspoonding value
+        if (board.checkWin(player)) {
+            if (player.getClass().getName() == "PlayerHuman") {
+                Move move = (Move) (player.getCurMove().clone());
+                move.setScore(Game.SCORE_LOSS);
+
+                return move;
+            } else {
+                Move move = (Move) (player.getCurMove().clone());
+                move.setScore(Game.SCORE_WIN);
+                return move;
+            }
+        } else if (emptyCells.size() == 0) {
+            return new Move();
+        }
+
+        // loop through available spots
+        for (Cell spot : emptyCells) {
+            Move move = new Move(spot);
+
+            // set the type of the empty spot to the current player's type
+            board.getBoard()[spot.getRow() * Game.SIZE + spot.getCol()].setType(player.getType());
+
+            // collect the score resulted from calling minimax on the opponent of the current player
+            Move result = null;
+            // Cell oppCell = new Cell(player.getCurMove().getCell().getRow(), player.getCurMove().getCell().getCol(), player.getOppType());
+
+            if (player.getClass().getName() == "PlayerRobot") {
+                result = miniMaxMove(board, new PlayerHuman(player.isFirst() ));
+
+            } else {
+                result = miniMaxMove(board, new PlayerRobot(player.isFirst(), Game.HARD));
+            }
+
+            move.setScore(result.getScore());
+
+            // reset the type of the spot to empty
+            board.getBoard()[spot.getRow() * Game.SIZE + spot.getCol()].setType(Game.CELL_EMPTY);
+
+            moves.add(move); // push the object to the ArrayList
+        }
+
+        // if it is the computer's turn loop over the moves and choose the move with the highest score
+        Move bestMove = new Move();
+        if (player.getClass().getName() == "PlayerRobot") {
+            int bestScore = -10000;
+            for (Move move : moves) {
+                if (move.getScore() > bestScore) {
+                    bestScore = move.getScore();
+                    bestMove = move;
+                }
+            }
+        } else { // else loop over the moves and choose the move with the lowest score
+            int bestScore = 10000;
+            for (Move move : moves) {
+                if (move.getScore() < bestScore) {
+                    bestScore = move.getScore();
+                    bestMove = move;
+                }
+            }
+        }
+
+        return bestMove; // return the chosen move from the array to the higher depth
+    }
 }
 
-class Cell {
+class Cell implements Cloneable{
     private int row;
     private int col;
     private int type;
@@ -1054,7 +1148,7 @@ class Cell {
     public Cell() {
         this.row = -1;
         this.col = -1;
-        this.type = Game.EMPTY_CELL;
+        this.type = Game.CELL_EMPTY;
     }
 
     public Cell(int type) {
@@ -1067,6 +1161,12 @@ class Cell {
         this.row = row;
         this.col = col;
         this.type = type;
+    }
+
+    public Cell(Cell cell) {
+        this.row = cell.getRow();
+        this.col = cell.getCol();
+        this.type = cell.getType();
     }
 
     public int getRow() {
@@ -1094,70 +1194,73 @@ class Cell {
     }
 
     public void draw() {
-        switch (this.type) {
-            case Game.EMPTY_CELL:
-                System.out.print("  ");
-                break;
-            case Game.X_CELL:
-                System.out.print(" X");
-                break;
-            case Game.O_CELL:
-                System.out.print(" O");
-                break;
-        }
+        System.out.print(this);
     }
 
     // @Override
-    public String to_String() {
-        return String.format("cell (%d, %d, %d)", this.row, this.col, this.type);
+    public String toString() {
+        String type;
+
+        switch (this.type) {
+            case Game.CELL_X:
+                type = " X";
+                break;
+            case Game.CELL_O:
+                type = " O";
+                break;
+            default:
+                // type = "_ ";
+                type = "  ";
+                break;
+        }
+
+        // return type + " @ (" + this.row + "," + this.col + ")";
+        return type;
+    }
+
+    /**
+     * implement deep clone
+     * @return the cloned cell ojbect
+     */
+    public Object clone() {
+        Cell copy = null;
+
+        try {
+            copy = (Cell) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        return copy;
     }
 }
 
 abstract class Board {
-    protected int size;
-    protected Cell[][] board_2d;
-    protected Cell[] board_1d;
-    protected int state;
-
-    protected int numOfX; // keep track of the number of X on the initial board
-    protected int numOfO; // keep track of the number of O on the initial board
-
-    public Board() {
-        this.size = Game.SIZE;
-
-        this.board_2d = new Cell[Game.SIZE][Game.SIZE];
-        for (int i = 0; i < Game.SIZE; i++) {
-            for (int j = 0; j < Game.SIZE; j++) {
-                this.board_2d[i][j] = new Cell(i, j, Game.EMPTY_CELL);
-            }
-        }
-
-        this.board_1d = new Cell[Game.SIZE * Game.SIZE];
-        boardConversion();
-
-        this.state = Game.NOT_FINISHED;
-
-        this.numOfX = 0;
-        this.numOfO = 0;
-    }
+    protected int size;         // number cells on the horizontal or vertical direction for a squared board
+    protected Cell[] board;
 
     public Board(int size) {
         this.size = size;
+        this.board = new Cell[this.size * this.size];
 
-        this.board_2d = new Cell[size][size];
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                this.board_2d[i][j] = new Cell(i, j, Game.EMPTY_CELL);
+        initBoardCells();
+    }
+
+    /**
+     * an empty constructor to compile sub-class GameTTTBoard successfully
+     * @param strBoard
+     */
+    public Board(String strBoard) {}
+
+    /**
+     * helper function to constructing the cells on the game board
+     */
+    protected void initBoardCells() {
+        for (int i = 0; i < this.size; i++) {
+            for (int j = 0; j < this.size; j++) {
+                this.board[i *this.size + j] = new Cell(i, j, Game.CELL_EMPTY);
             }
         }
-
-        this.board_1d = new Cell[size * size];
-        boardConversion();
-
-        this.state = Game.NOT_FINISHED;
-
-        this.numOfX = 0;
-        this.numOfO = 0;
     }
 
     public int getSize() {
@@ -1168,20 +1271,190 @@ abstract class Board {
         this.size = size;
     }
 
-    public Cell[][] getBoard2d() {
-        return this.board_2d;
+    public Cell[] getBoard() {
+        return this.board;
     }
 
-    public void setBoard2d(Cell[][] board) {
-        this.board_2d = board;
+    /**
+     * get the empty cells on the board
+     *
+     * @return an ArrayList with empty cells
+     */
+    public ArrayList<Cell> getEmptyCells() {
+        ArrayList<Cell> emptyCells = new ArrayList<>();
+
+        for (Cell cell : this.board) {
+            if (cell.getType() == Game.CELL_EMPTY) {
+                emptyCells.add(cell);
+            }
+        }
+
+        return emptyCells;
     }
 
-    public Cell[] getBoard1d() {
-        return this.board_1d;
+    /**
+     * reset the board for a new game
+     *
+     */
+    public void clear() {
+        for (Cell cell : this.board) {
+            cell.setType(Game.CELL_EMPTY);;
+        }
     }
 
-    public void setBoard1d(Cell[] board) {
-        this.board_1d = board;
+    /**
+     * draw the board onto the screen
+     *
+     */
+    public void draw(Scanner scanner) {
+        System.out.print(this);
+    }
+
+    @Override
+    public String toString() {
+        String strBoard = "";
+
+        strBoard += "---------\n";
+
+        for (int i = 0; i < Game.SIZE; i++) {
+            strBoard += "|";
+
+            for (int j = 0; j < Game.SIZE; j++) {
+                strBoard += this.board[i * Game.SIZE + j];
+            }
+
+            strBoard += " |\n";
+        }
+
+        strBoard += "---------\n";
+
+        return strBoard;
+    }
+
+    abstract public String getStrGameBoard();
+}
+
+/**
+ * utility class providing various common methods for ease use
+ */
+class JUtil {
+    /**
+     * check if a positive number is the perfect square number
+     * @param num a positive number
+     * @return true if it is the perfect square number
+     */
+    public static boolean isPerfectSquareNumber(int num) {
+        double sqrtNum = Math.sqrt(num);
+
+        return (sqrtNum - Math.floor(sqrtNum) == 0);
+    }
+}
+
+class GameTTTBoard extends Board {
+    protected int numOfX;       // track the number of X cell on the board
+    protected int numOfO;       // track the number of O cell on the board
+    protected int numOfEmpty;   // track the number of EMPTY cell on the board
+
+    protected int state;
+
+    public GameTTTBoard() {
+        super(Game.SIZE);
+
+        this.numOfX = 0;
+        this.numOfO = 0;
+        this.numOfEmpty = this.size * this.size;
+
+        this.state = Game.NOT_FINISHED;
+    }
+
+    public GameTTTBoard(String strBoard) {
+        super(strBoard);
+
+        this.size = (int) Math.sqrt(strBoard.length());
+        this.board = new Cell[this.size * this.size];
+
+        initBoardCells();
+
+        int i = 0;
+        for (char ch : strBoard.toCharArray()) {
+            switch(ch) {
+                case 'X':
+                    this.board[i++].setType(Game.CELL_X);
+                    break;
+                case 'O':
+                    this.board[i++].setType(Game.CELL_O);
+                    break;
+                case '_':
+                    this.board[i++].setType(Game.CELL_EMPTY);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        calcNumOfCellType();
+
+        this.state = Game.NOT_FINISHED;
+    }
+
+    /**
+     * Get the initial game board in String format from the standard input
+     * @return the valid game board in String format
+     */
+    public String getStrGameBoard() {
+        System.out.print("Input the starting game board: > ");
+
+        Scanner scanner = new Scanner(System.in);
+        String strBoard = scanner.nextLine();
+
+        int len = strBoard.length();
+
+        /*
+         * check:
+         *    1) if the length of the game board string is a perfect squared number
+         *    2) if the board cells are valid
+         */
+        while (!JUtil.isPerfectSquareNumber(len) && !checkBoardCells(strBoard)) {
+            System.out.println("\nPlease input the correct game board string!\n");
+
+            strBoard = scanner.nextLine();
+            len = strBoard.length();
+        }
+
+        scanner.close();
+
+        return strBoard;
+    }
+
+    /**
+     * check the validity of the board cells
+     * @param strBoard game board in String format
+     * @return true if the game board is valid, false otherwise
+     */
+    private boolean checkBoardCells(String strBoard) {
+        for (char cell : strBoard.toUpperCase().toCharArray()) {
+            if (cell != 'X' || cell != 'O' || cell != '_') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public int getNumOfX() {
+        return this.numOfX;
+    }
+
+    public void setNumOfX(int num) {
+        this.numOfX = num;
+    }
+
+    public int getNumOfO() {
+        return this.numOfO;
+    }
+
+    public void setNumOfO(int num) {
+        this.numOfO = num;
     }
 
     public int getState() {
@@ -1192,159 +1465,55 @@ abstract class Board {
         this.state = state;
     }
 
-    abstract public void draw(Scanner scanner);
-
     /**
-     * convert a two-dimensional board to one dimension
-     *
-     * @return game board in one dimension
+     * helper method: calculate the number of different types respectively
      */
-    public void boardConversion() {
-
-        int i = 0;
-        for (Cell[] row : this.board_2d) {
-            for (Cell cell : row) {
-                board_1d[i++] = cell;
-            }
+    private void calcNumOfCellType() {
+        for (Cell cell : this.board) {
+            this.numOfX += cell.getType() == Game.CELL_X ? 1 : 0;
+            this.numOfO += cell.getType() == Game.CELL_O ? 1 : 0;
         }
+
+        this.numOfEmpty = this.size * this.size - (this.numOfX + this.numOfO);
     }
 
     /**
-     * get the available spots on the board
+     * check if player wins the game
      *
-     * @param board game board
-     * @return a string with available spots
+     * @param player player to check if wins
+     * @return true if this player wins otherwise false
      */
-    private String emptyIndexies(int[] board) {
-        StringBuilder sb = new StringBuilder();
+    public boolean checkWin(Player player) {
+        int playerType = player.getType();
 
-        for (int i = 0; i < board.length; i++) {
-            if (board[i] == Game.EMPTY_CELL) {
-                sb.append(i);
-            }
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * reset the board for the next game
-     *
-     */
-    public void clear() {
-        for (int row = 0; row < this.size; row++) {
-            for (int col = 0; col < this.size; col++) {
-                this.board_2d[row][col].setType(Game.EMPTY_CELL);
-            }
-        }
-
-        boardConversion();
-    }
-
-    @Override
-    public String toString() {
-        return null;
-    }
-
-    /*
-     * @Deprecated
-     * 
-     * Setup the board with initial string input from System.in.
-     * Note: this method actually used in the first stage of this game development,
-     * and it's not used anymore.
-     *
-     * @param scanner java.util.Scanner
-     * 
-     * @param board game board
-     * 
-     * private void setupBoard(Scanner scanner) {
-     * int row; // x coordinate
-     * int col; // y coordinate
-     * 
-     * System.out.print("Enter the cells: > ");
-     * String strCells = scanner.next();
-     * 
-     * row = 0;
-     * 
-     * // print out the initial board and set up the tic-tac-toe board
-     * System.out.println("---------");
-     * 
-     * for (int k = 0; k < strCells.length(); k += 3) {
-     * System.out.print('|');
-     * 
-     * for (col = 0; col < this.size; col++) {
-     * if (strCells.charAt(k + col) == '_') {
-     * System.out.print("  ");
-     * this.board_2d[row][col] = Game.EMPTY_CELL;
-     * } else {
-     * System.out.print(" " + strCells.charAt(k + col));
-     * if (strCells.charAt(k + col) == 'X') {
-     * this.board_2d[row][col] = Game.X_CELL;
-     * this.numOfX++;
-     * } else {
-     * this.board_2d[row][col] = Game.O_CELL;
-     * this.numOfO++;
-     * }
-     * }
-     * }
-     * 
-     * System.out.println(" |");
-     * row++; // move to the next row
-     * }
-     * 
-     * System.out.println("---------");
-     * }
-     */
-}
-
-class GameTTTBoard extends Board {
-    public GameTTTBoard() {
-        super(Game.SIZE);
-    }
-
-    /**
-     * draw the board onto the screen
-     *
-     */
-    @Override
-    public void draw(Scanner scanner) {
-        System.out.println("---------");
-
-        for (int row = 0; row < this.size; row++) {
-            System.out.print('|');
-
-            for (int col = 0; col < this.size; col++) {
-                this.board_2d[row][col].draw();
-            }
-
-            System.out.println(" |");
-        }
-
-        System.out.println("---------");
-    }
-
-    public int evaluate() {
-        return 0;
+        return (this.board[0].getType() == playerType && this.board[1].getType() == playerType && this.board[2].getType() == playerType) ||
+                (this.board[3].getType() == playerType && this.board[4].getType() == playerType && this.board[5].getType() == playerType) ||
+                (this.board[6].getType() == playerType && this.board[7].getType() == playerType && this.board[8].getType() == playerType) ||
+                (this.board[0].getType() == playerType && this.board[3].getType() == playerType && this.board[6].getType() == playerType) ||
+                (this.board[1].getType() == playerType && this.board[4].getType() == playerType && this.board[7].getType() == playerType) ||
+                (this.board[2].getType() == playerType && this.board[5].getType() == playerType && this.board[8].getType() == playerType) ||
+                (this.board[0].getType() == playerType && this.board[4].getType() == playerType && this.board[8].getType() == playerType) ||
+                (this.board[2].getType() == playerType && this.board[4].getType() == playerType && this.board[6].getType() == playerType);
     }
 }
 
-class Move {
+class Move implements Cloneable{
     private int score;
     private Cell cell;
 
     public Move() {
-        this.score = Game.DRAW_SCORE;
+        this.score = Game.SCORE_DRAW;
         this.cell = new Cell();
     }
 
     public Move(Cell cell) {
-        this.score = Game.DRAW_SCORE;
-        this.cell = cell;
+        this.score = Game.SCORE_DRAW;
+        this.cell = (Cell) cell.clone();
     }
 
     public Move(int score, Cell cell) {
         this.score = score;
-        this.cell = cell;
+        this.cell = (Cell) cell.clone();
     }
 
     public int getScore() {
@@ -1360,6 +1529,24 @@ class Move {
     }
 
     public void setCell(Cell cell) {
-        this.cell = cell;
+        this.cell = (Cell) cell.clone();
+    }
+
+    // @Override
+    public String toString() {
+        return "[" + this.cell + ", score: " + this.score + "]";
+    }
+
+    public Object clone() {
+        Move copy = null;
+
+        try {
+            copy = (Move) super.clone();
+            copy.cell = (Cell) this.cell.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        return copy;
     }
 }
