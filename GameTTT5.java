@@ -1,18 +1,18 @@
 // package tictactoe;
 
 import java.util.Scanner;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Random;
 
 /**
  * The 5th development stage of the game tic-tac-toe.
  *
- * Step 1: re-code the game with OOP approach, and pass the tests
+ * Step 1: re-code the game with OOP approach, and re-test the code to pass all the tests on the stage 4/5
  *
  * step 2: rewrite the program with the following sub-steps:
- *    2.1: use 1D array to represent 2D board;
- *    2.2: clean up the code to make it more compact and beautiful
- *    2.3: pass the tests in the jetbrains academy again
+ *      - 2.1: use a flattened 1D game board  to represent 2D board;
+ *      - 2.2: clean up the code to make it more compact and beautiful
+ *      - 2.3: pass the tests in the jetbrains academy again
  *
  * step 3: implement the hard level of robot player, using minimax algorithm
  *  A Minimax algorithm can be best defined as a recursive function that does the following things:
@@ -35,15 +35,15 @@ public class GameTTT5 {
      */
     public static void main(String[] args) {
         Game game = new Game();
-        game.start();
-        // game.testMiniMax();
+        // game.start();
+        game.testMiniMax();
     }
 }
 
 
 class Game {
     /**
-     * Define the constants
+     * constants definition
      */
 
     // number of cells in a row on a sqaured board
@@ -78,8 +78,12 @@ class Game {
     /**
      * member variables
      */
+    private Player playerOne;
+    private Player playerTwo;
+
+    private Board board;
+
     private boolean isPlayerOneMove;    // who is moving now
-    private int fc;                     // keep track of the function calls for the minimax function
     private int state;                  // game state
 
     public Game() {
@@ -90,42 +94,72 @@ class Game {
      * reset the game parameters
      */
     private void resetGame() {
+        this.playerOne = null;
+        this.playerTwo = null;
+        this.board = null;
+
         this.isPlayerOneMove = true;
-        this.fc = 0;
-        this.state = INVALID;
+        this.state = Game.INVALID;     
     }
 
     /**
      * test the functionality of minimaxMove method
+     * 
+     * visualize the robot moves starting from the sample game state
+     * 
+                                   O |   | X
+                                   ---------
+                                   X |   | X
+                                   ---------
+                                     | O | O
+                             //       ||        \\
+                O | X | X          O |   | X        O |   | X
+                ---------          ---------        ---------
+                X |   | X          X | X | X        X |   | X
+                ---------          ---------        ---------
+                  | O | O            | O | O        X | O | O
+              //          \\                     //          \\
+        O | X | X          O | X | X        O | O | X       O |   | X
+        ---------          ---------        ---------       ---------
+        X | O | X          X |   | X        X |   | X       X | O | X
+        ---------          ---------        ---------       ---------
+          | O | O          O | O | O        X | O | O       X | O | O
+                                        //
+                                   O | O | X
+                                   ---------
+                                   X | X | X
+                                   ---------
+                                   O | O | O
+     *
      */
     public void testMiniMax() {
         String strBoard = "O_XX_X_OO";
-        GameTTTBoard board = new GameTTTBoard(strBoard);
+        
+        this.board = new GameTTTBoard(strBoard);
 
-        PlayerRobot playerOne = new PlayerRobot(); // default constructor: first player and easy level
-        PlayerHuman playerTwo = new PlayerHuman(); // default constructor: second player
+        this.playerOne = new PlayerRobot(Game.HARD);     // first player and easy level
+        this.playerTwo = new PlayerHuman(false);         // second player
 
         for (Cell cell : board.getBoard()) {
             switch(cell.getType()) {
                 case Game.CELL_X:
-                    playerOne.makeMove(new Move(0, cell));
+                    this.playerOne.makeMove(new Move(0, cell));
                     break;
                 case Game.CELL_O:
-                    playerTwo.makeMove(new Move(0, cell));
+                    this.playerTwo.makeMove(new Move(0, cell));
                     break;
                 default:
                     break;
             }
         }
 
-        // System.out.println("player one's moves: > " + playerOne.getMoves());
-        // System.out.println("player two's moves: > " + playerTwo.getMoves());
+        System.out.println("player one's moves: > " + playerOne.getMoves());
+        System.out.println("player two's moves: > " + playerTwo.getMoves());
 
-        Move bestMove = playerOne.miniMaxMove(board, playerOne);
-        System.out.println("next best move: " + bestMove);
+        // Move bestMove = playerOne.miniMaxMove(board, playerOne);
+        // System.out.println("next best move: " + bestMove);
+        // System.out.println("number of function calls for minimax algorithm: " + playerOne.getFc());
     }
-
-
 
     /**
      * The main control loop of the game
@@ -135,8 +169,6 @@ class Game {
 
         String strCommand = null;   // command string: "start", "exit"
         String strParam = null;     // parameter string after command
-        Player playerOne = null;    // first player
-        Player playerTwo = null;    // second player
 
         do {
             System.out.print("Input command: > ");
@@ -159,47 +191,52 @@ class Game {
 
                         switch (arrayParam[1]) {
                             case "easy":
-                                playerOne = new PlayerRobot(); // default constructor: first player and easy level
+                                this.playerOne = new PlayerRobot(); // default constructor: first player and easy level
                                 break;
                             case "medium":
-                                playerOne = new PlayerRobot(Game.MEDIUM);
+                                this.playerOne = new PlayerRobot(Game.MEDIUM);
                                 break;
                             case "hard":
-                                playerOne = new PlayerRobot(Game.HARD);
+                                this.playerOne = new PlayerRobot(Game.HARD);
                                 break;
                             case "user":
-                                playerOne = new PlayerHuman(); // default constructor: second player
+                                this.playerOne = new PlayerHuman(); // default constructor: second player
                                 break;
                         }
 
                         switch (arrayParam[2]) {
                             case "easy":
-                                playerTwo = new PlayerRobot(false);
+                                this.playerTwo = new PlayerRobot(false);
                                 break;
                             case "medium":
-                                playerTwo = new PlayerRobot(false, Game.MEDIUM);
+                                this.playerTwo = new PlayerRobot(false, Game.MEDIUM);
                                 break;
                             case "hard":
-                                playerTwo = new PlayerRobot(false, Game.HARD);
+                                this.playerTwo = new PlayerRobot(false, Game.HARD);
                                 break;
                             case "user":
-                                playerTwo = new PlayerHuman(false);
+                                this.playerTwo = new PlayerHuman(false);
                                 break;
                         }
 
-                        GameTTTBoard board = new GameTTTBoard();
-                        board.draw(scanner); // draw the empty board
+                        this.board = new GameTTTBoard();
+                        this.board.draw(scanner); // draw the empty board
 
-                        play(scanner, board, playerOne, playerTwo); // game starts here!
+                        play(scanner); // game starts here!
 
-                        board.clear();  // reset the board
+                        this.board.clear();  // reset the board
                         resetGame();    // reset the game parameters
+
+                        if (this.playerOne.getClass().getName() == "PlayerRobot") {
+                            this.playerOne.resetFc();
+                        }
+
+                        if (this.playerTwo.getClass().getName() == "PlayerRobot") {
+                            this.playerTwo.resetFc();
+                        }
 
                         strCommand = null;
                         strParam = null;
-                        playerOne = null;
-                        playerTwo = null;
-
                     } else {
                         System.out.println("Bad parameters!");
                     }
@@ -218,22 +255,19 @@ class Game {
      * The game main logic
      *
      * @param scanner java.util.Scanner
-     * @param board   game board
-     * @param playerOne the first player
-     * @param playerTwo the second player
      */
-    private void play(Scanner scanner, GameTTTBoard board, Player playerOne, Player playerTwo) {
+    private void play(Scanner scanner) {
         // infinite loop until one side win or draw
         while (true) {
             if (this.isPlayerOneMove) {
-                playerOne.MoveNext(scanner, board);
+                this.playerOne.MoveNext(scanner, board);
             } else {
-                playerTwo.MoveNext(scanner, board);
+                this.playerTwo.MoveNext(scanner, board);
             }
 
-            board.draw(scanner);
+            this.board.draw(scanner);
 
-            this.state = checkState(board, playerOne, playerTwo); // check game state
+            this.state = checkState(); // check game state
             switch (this.state) {
                 case X_WIN:
                     System.out.println("X wins");
@@ -245,7 +279,7 @@ class Game {
                     System.out.println("Draw");
                     return;
                 case NOT_FINISHED:
-                    isPlayerOneMove = !isPlayerOneMove; // continue playing the game by switching the side
+                    this.isPlayerOneMove = !this.isPlayerOneMove; // continue playing the game by switching the side
                     break;
             }
         }
@@ -254,25 +288,22 @@ class Game {
     /**
      * check the game state
      *
-     * @param board game board
-     * @param playerOne first player 'X'
-     * @param playerTwo second player 'O'
      * @return game state
      */
-    private int checkState(GameTTTBoard board, Player playerOne, Player playerTwo) {
-        if (board.checkWin(playerOne)) {
+    private int checkState() {
+        if (this.board.checkWin(this.playerOne)) {
             return X_WIN;
         }
 
-        if (board.checkWin(playerTwo)) {
+        if (this.board.checkWin(this.playerTwo)) {
             return O_WIN;
         }
 
         boolean isBoardFull = true;
 
-        for (int row = 0; row < SIZE; row++) {
-            for (int col = 0; col < SIZE; col++) {
-                if (board.getBoard()[row * SIZE + col].getType() == CELL_EMPTY) {
+        for (int row = 0; row < this.board.size; row++) {
+            for (int col = 0; col < this.board.size; col++) {
+                if (this.board.getBoard()[row * this.board.size + col].getType() == CELL_EMPTY) {
                     isBoardFull = false;
                     break; // break out of the inner for loop
                 }
@@ -283,7 +314,7 @@ class Game {
             }
         }
 
-        return isBoardFull? DRAW : NOT_FINISHED;
+        return isBoardFull? Game.DRAW : Game.NOT_FINISHED;
     }
 }
 
@@ -292,22 +323,26 @@ abstract class Player implements Cloneable{
     protected int type;
     protected Move curMove;
     protected Move nextMove;
-    protected ArrayList<Move> moves;
+    protected LinkedList<Move> moves;
 
     public Player() {
         this.isFirst = true;
         this.type = Game.CELL_X;
+
         this.curMove = new Move();
         this.nextMove = new Move();
-        this.moves = new ArrayList<Move>();
+
+        this.moves = new LinkedList<Move>();
     }
 
     public Player(boolean isFirst) {
         this.isFirst = isFirst;
         this.type = isFirst ? Game.CELL_X : Game.CELL_O;
+
         this.curMove = new Move();
         this.nextMove = new Move();
-        this.moves = new ArrayList<Move>();
+
+        this.moves = new LinkedList<Move>();
     }
 
     public boolean isFirst() {
@@ -349,7 +384,7 @@ abstract class Player implements Cloneable{
         }
     }
 
-    public ArrayList<Move> getMoves() {
+    public LinkedList<Move> getMoves() {
         return this.moves;
     }
 
@@ -365,7 +400,7 @@ abstract class Player implements Cloneable{
     @Override
     public String toString() {
         String player = this.isFirst ? "playerOne" : "playerTwo";
-        return player + " at " + this.curMove;
+        return player + " @ " + this.curMove;
     }
 
     /**
@@ -430,8 +465,8 @@ class PlayerHuman extends Player {
                 continue;
             }
 
-            row = strRow.toCharArray()[0] - '1';
-            col = strCol.toCharArray()[0] - '1';
+            row = strRow.toCharArray()[0] - '1';    // x coordinate starts from 0
+            col = strCol.toCharArray()[0] - '1';    // y coordinate starts from 0
             if (row < 0 || row > 2 || col < 0 || col > 2) { // convert to the board coordinates
                 System.out.println("Coordinates should be from 1 to 3!");
                 continue;
@@ -453,6 +488,7 @@ class PlayerHuman extends Player {
 
 class PlayerRobot extends Player {
     private final int level;
+    private int fc = 0;                     // keep track of the function calls for the minimax function
 
     public PlayerRobot() {
         super();
@@ -472,6 +508,14 @@ class PlayerRobot extends Player {
     public PlayerRobot(boolean isFirst, int level) {
         super(isFirst);
         this.level = level;
+    }
+
+    public int getFc() {
+        return this.fc;
+    }
+
+    public void resetFc() {
+        this.fc = 0;
     }
 
     @Override
@@ -1064,17 +1108,19 @@ class PlayerRobot extends Player {
     }
 
     /**
-     * Implement the minimax algorithm to find the next best move
+     * Implement the minimax algorithm to find the ultimate play on the game that favors the computer
      *
      * @param board  game board
      * @param player current player
      * @return next best move
      */
     public Move miniMaxMove(GameTTTBoard board, Player player) {
-        ArrayList<Cell> emptyCells = board.getEmptyCells();
-        ArrayList<Move> moves = new ArrayList<>(); // an array to collect all the moves
+        this.fc++;
 
-        // checks for the terminal states such as win, lose, and draw and returning a correspoonding value
+        LinkedList<Cell> emptyCells = board.getEmptyCells();
+        LinkedList<Move> nextMoves = new LinkedList<>(); // a linkedlist to collect all the moves
+
+        // checks for the terminal states such as win, lose, and draw, and return a value accordingly
         if (board.checkWin(player)) {
             if (player.getClass().getName() == "PlayerHuman") {
                 Move move = (Move) (player.getCurMove().clone());
@@ -1087,40 +1133,40 @@ class PlayerRobot extends Player {
                 return move;
             }
         } else if (emptyCells.size() == 0) {
-            return new Move();
+            return new Move();  // ?? move ->> [score: 0, cell: (-1, -1)]
         }
 
         // loop through available spots
         for (Cell spot : emptyCells) {
-            Move move = new Move(spot);
+            Move curMove = new Move(spot);  // ?? curMove ->> [score: 0, cell: (spot.clone())]
 
-            // set the type of the empty spot to the current player's type
-            board.getBoard()[spot.getRow() * Game.SIZE + spot.getCol()].setType(player.getType());
+            // set the type of the availble spot to the current player's type
+            int curIndex = spot.getRow() * Game.SIZE + spot.getCol();
+            board.getBoard()[curIndex].setType(player.getType());
 
             // collect the score resulted from calling minimax on the opponent of the current player
             Move result = null;
-            // Cell oppCell = new Cell(player.getCurMove().getCell().getRow(), player.getCurMove().getCell().getCol(), player.getOppType());
 
             if (player.getClass().getName() == "PlayerRobot") {
-                result = miniMaxMove(board, new PlayerHuman(player.isFirst() ));
+                result = miniMaxMove(board, new PlayerHuman(player.isFirst() ));    // ?? new PlayerHuman ->> this is problematic !!
 
             } else {
-                result = miniMaxMove(board, new PlayerRobot(player.isFirst(), Game.HARD));
+                result = miniMaxMove(board, new PlayerRobot(player.isFirst(), Game.HARD));  // ?? new PlayerRobot ->> this is problematic !!
             }
 
-            move.setScore(result.getScore());
+            curMove.setScore(result.getScore());
 
-            // reset the type of the spot to empty
-            board.getBoard()[spot.getRow() * Game.SIZE + spot.getCol()].setType(Game.CELL_EMPTY);
+            // reset the spot type back to empty
+            board.getBoard()[curIndex].setType(Game.CELL_EMPTY);
 
-            moves.add(move); // push the object to the ArrayList
+            nextMoves.add(curMove); // push the object to the LinkedList
         }
 
-        // if it is the computer's turn loop over the moves and choose the move with the highest score
+        // if it is the computer's turn, loop over the moves and choose the move with the highest score
         Move bestMove = new Move();
         if (player.getClass().getName() == "PlayerRobot") {
             int bestScore = -10000;
-            for (Move move : moves) {
+            for (Move move : nextMoves) {
                 if (move.getScore() > bestScore) {
                     bestScore = move.getScore();
                     bestMove = move;
@@ -1128,7 +1174,7 @@ class PlayerRobot extends Player {
             }
         } else { // else loop over the moves and choose the move with the lowest score
             int bestScore = 10000;
-            for (Move move : moves) {
+            for (Move move : nextMoves) {
                 if (move.getScore() < bestScore) {
                     bestScore = move.getScore();
                     bestMove = move;
@@ -1136,7 +1182,7 @@ class PlayerRobot extends Player {
             }
         }
 
-        return bestMove; // return the chosen move from the array to the higher depth
+        return bestMove; // return the chosen move object from the Linkedlist to the higher depth
     }
 }
 
@@ -1199,23 +1245,23 @@ class Cell implements Cloneable{
 
     // @Override
     public String toString() {
-        String type;
+        String strType;
 
         switch (this.type) {
             case Game.CELL_X:
-                type = " X";
+                strType = " X";
                 break;
             case Game.CELL_O:
-                type = " O";
+                strType = " O";
                 break;
             default:
-                // type = "_ ";
-                type = "  ";
+                // strType = "_ ";
+                strType = "  ";
                 break;
         }
 
-        // return type + " @ (" + this.row + "," + this.col + ")";
-        return type;
+        return strType + " @ (" + this.row + "," + this.col + ")";
+        // return strType;
     }
 
     /**
@@ -1236,7 +1282,7 @@ class Cell implements Cloneable{
 }
 
 abstract class Board {
-    protected int size;         // number cells on the horizontal or vertical direction for a squared board
+    protected int size;     // number cells on the horizontal or vertical direction for a squared board
     protected Cell[] board;
 
     public Board(int size) {
@@ -1278,10 +1324,10 @@ abstract class Board {
     /**
      * get the empty cells on the board
      *
-     * @return an ArrayList with empty cells
+     * @return an LinkedList with empty cells
      */
-    public ArrayList<Cell> getEmptyCells() {
-        ArrayList<Cell> emptyCells = new ArrayList<>();
+    public LinkedList<Cell> getEmptyCells() {
+        LinkedList<Cell> emptyCells = new LinkedList<>();
 
         for (Cell cell : this.board) {
             if (cell.getType() == Game.CELL_EMPTY) {
@@ -1534,7 +1580,7 @@ class Move implements Cloneable{
 
     // @Override
     public String toString() {
-        return "[" + this.cell + ", score: " + this.score + "]";
+        return "[" + this.cell + ", score -> (" + this.score + ")]";
     }
 
     public Object clone() {
