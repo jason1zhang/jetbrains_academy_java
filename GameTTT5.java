@@ -7,12 +7,14 @@ import java.util.Random;
 /**
  * The 5th development stage of the game tic-tac-toe.
  *
- * Step 1: re-code the game with OOP approach, and re-test the code to pass all the tests on the stage 4/5
+ * Step 1: re-code the game with OOP approach, and re-test the code such that it can pass all the tests on the stage 4/5.
  *
  * step 2: rewrite the program with the following sub-steps:
  *      - 2.1: use a flattened 1D game board  to represent 2D board;
  *      - 2.2: clean up the code to make it more compact and beautiful
- *      - 2.3: pass the tests in the jetbrains academy again
+ *      - 2.3: think more deeply about object oriented design, and apply it into the code
+ *      - 2.4: pass the tests in the jetbrains academy again
+ *      - 2.5: debug the recurisve minimax algorithm, and not give up easily
  *
  * step 3: implement the hard level of robot player, using minimax algorithm
  *  A Minimax algorithm can be best defined as a recursive function that does the following things:
@@ -74,6 +76,8 @@ class Game {
     final static int SCORE_WIN = 10;
     final static int SCORE_LOSS = -10;
     final static int SCORE_DRAW = 0;
+    final static int SCORE_MAX = 10000;
+    final static int SCORE_MIN = -10000;
 
     /**
      * member variables
@@ -100,6 +104,34 @@ class Game {
 
         this.isPlayerOneMove = true;
         this.state = Game.INVALID;     
+    }
+
+    public Board getBoard() {
+        return this.board;
+    }
+
+    public Player getPlayerOne() {
+        return this.playerOne;
+    }
+
+    public Player getPlayerTwo() {
+        return this.playerTwo;
+    }
+
+    /**
+     * Get current player
+     * @return player who is making the current move
+     */
+    public Player getCurPlayer() {
+        return this.isPlayerOneMove ? this.playerOne : this.playerTwo;
+    }
+
+    /**
+     * Get the other player
+     * @return player who is not making the move
+     */
+    public Player getOtherPlayer() {
+        return this.isPlayerOneMove ? this.playerTwo : this.playerOne;
     }
 
     /**
@@ -135,30 +167,33 @@ class Game {
     public void testMiniMax() {
         String strBoard = "O_XX_X_OO";
         
-        this.board = new GameTTTBoard(strBoard);
+        this.board = new GameTTTBoard(strBoard);        // construct the board object with the inital board setup
 
-        this.playerOne = new PlayerRobot(Game.HARD);     // first player and easy level
-        this.playerTwo = new PlayerHuman(false);         // second player
+        this.playerOne = new PlayerRobot(Game.HARD);    // Robot player moves first in hard level
+        this.playerTwo = new PlayerHuman(false);        // Human plaer moves second
 
         for (Cell cell : board.getBoard()) {
             switch(cell.getType()) {
                 case Game.CELL_X:
                     this.playerOne.makeMove(new Move(0, cell));
+                    this.playerTwo.setMoving(false);
                     break;
                 case Game.CELL_O:
                     this.playerTwo.makeMove(new Move(0, cell));
+                    this.playerOne.setMoving(false);
                     break;
                 default:
                     break;
             }
         }
 
-        System.out.println("player one's moves: > " + playerOne.getMoves());
-        System.out.println("player two's moves: > " + playerTwo.getMoves());
+        // System.out.println("player one's moves: > " + playerOne.getMoves());
+        // System.out.println("player two's moves: > " + playerTwo.getMoves());
 
-        // Move bestMove = playerOne.miniMaxMove(board, playerOne);
-        // System.out.println("next best move: " + bestMove);
-        // System.out.println("number of function calls for minimax algorithm: " + playerOne.getFc());
+        Move bestMove = ((PlayerRobot)playerOne).miniMaxMove(this.board, playerOne);
+        System.out.println("next best move: " + bestMove);
+        System.out.println("number of minimax function calls: " + ((PlayerRobot)playerOne).getFc());
+        System.out.println("depth of minimax game tree: " + ((PlayerRobot)playerOne).getDepth());
     }
 
     /**
@@ -227,6 +262,7 @@ class Game {
                         this.board.clear();  // reset the board
                         resetGame();    // reset the game parameters
 
+                        /*
                         if (this.playerOne.getClass().getName() == "PlayerRobot") {
                             this.playerOne.resetFc();
                         }
@@ -234,6 +270,7 @@ class Game {
                         if (this.playerTwo.getClass().getName() == "PlayerRobot") {
                             this.playerTwo.resetFc();
                         }
+                        */
 
                         strCommand = null;
                         strParam = null;
@@ -260,9 +297,9 @@ class Game {
         // infinite loop until one side win or draw
         while (true) {
             if (this.isPlayerOneMove) {
-                this.playerOne.MoveNext(scanner, board);
+                this.playerOne.MoveNext(scanner, this.board);
             } else {
-                this.playerTwo.MoveNext(scanner, board);
+                this.playerTwo.MoveNext(scanner, this.board);
             }
 
             this.board.draw(scanner);
@@ -291,11 +328,11 @@ class Game {
      * @return game state
      */
     private int checkState() {
-        if (this.board.checkWin(this.playerOne)) {
+        if (((GameTTTBoard)this.board).checkWin(this.playerOne)) {
             return X_WIN;
         }
 
-        if (this.board.checkWin(this.playerTwo)) {
+        if (((GameTTTBoard)this.board).checkWin(this.playerTwo)) {
             return O_WIN;
         }
 
@@ -319,29 +356,31 @@ class Game {
 }
 
 abstract class Player implements Cloneable{
-    protected boolean isFirst; // first player flag
+    protected boolean isFirst;  // if it's first player
+    protected boolean isMoving; // if currently making move, but this flag is not used for now
+
     protected int type;
+
     protected Move curMove;
-    protected Move nextMove;
     protected LinkedList<Move> moves;
 
     public Player() {
         this.isFirst = true;
+        this.isMoving = false;
+
         this.type = Game.CELL_X;
 
         this.curMove = new Move();
-        this.nextMove = new Move();
-
         this.moves = new LinkedList<Move>();
     }
 
     public Player(boolean isFirst) {
         this.isFirst = isFirst;
+        this.isMoving = false;
+
         this.type = isFirst ? Game.CELL_X : Game.CELL_O;
 
         this.curMove = new Move();
-        this.nextMove = new Move();
-
         this.moves = new LinkedList<Move>();
     }
 
@@ -351,6 +390,14 @@ abstract class Player implements Cloneable{
 
     public void setFirst(boolean isFirst) {
         this.isFirst = isFirst;
+    }
+
+    public boolean isMoving() {
+        return this.isMoving;
+    }
+
+    public void setMoving(boolean isMoving) {
+        this.isMoving = isMoving;
     }
 
     public int getType() {
@@ -393,7 +440,9 @@ abstract class Player implements Cloneable{
      * @param move current move
      */
     public void makeMove(Move move) {
+        this.isMoving = true;
         this.curMove = move;
+
         this.moves.add(move);
     }
 
@@ -413,7 +462,7 @@ abstract class Player implements Cloneable{
         try {
             copy = (Player) super.clone();
             copy.curMove = (Move) this.curMove.clone();
-            copy.nextMove = (Move) this.nextMove.clone();
+            copy.moves = (LinkedList<Move>) this.moves.clone();
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
         }
@@ -421,7 +470,7 @@ abstract class Player implements Cloneable{
         return copy;
     }
 
-    abstract protected void MoveNext(Scanner scanner, GameTTTBoard board);
+    abstract protected void MoveNext(Scanner scanner, Board board);
 }
 
 class PlayerHuman extends Player {
@@ -440,7 +489,7 @@ class PlayerHuman extends Player {
      * @param scanner java.util.Scanner
      * @param board   game board
      */
-    protected void MoveNext(Scanner scanner, GameTTTBoard board) {
+    protected void MoveNext(Scanner scanner, Board board) {
         int row; // x coordinate
         int col; // y coordinate
 
@@ -488,7 +537,8 @@ class PlayerHuman extends Player {
 
 class PlayerRobot extends Player {
     private final int level;
-    private int fc = 0;                     // keep track of the function calls for the minimax function
+    private int fc = 0;     // keep track of the function calls for the minimax function
+    private int depth = 0;  // depth of the minimax game tree
 
     public PlayerRobot() {
         super();
@@ -518,8 +568,12 @@ class PlayerRobot extends Player {
         this.fc = 0;
     }
 
+    public int getDepth() {
+        return this.depth;
+    }
+
     @Override
-    protected void MoveNext(Scanner scanner, GameTTTBoard board) {
+    protected void MoveNext(Scanner scanner, Board board) {
         switch (this.level) {
             case Game.EASY:
                 System.out.println("Making move level \"easy\"");
@@ -542,7 +596,7 @@ class PlayerRobot extends Player {
      * @param scanner java.util.Scanner
      * @param board   game board
      */
-    private void MoveNextEasy(Scanner scanner, GameTTTBoard board) {
+    private void MoveNextEasy(Scanner scanner, Board board) {
         Random rand = new Random();
         int row;
         int col;
@@ -554,7 +608,7 @@ class PlayerRobot extends Player {
         } while (board.getBoard()[row * Game.SIZE + col].getType() != Game.CELL_EMPTY);
 
         Cell cell = this.isFirst ? new Cell(row, col, Game.CELL_X) : new Cell(row, col, Game.CELL_O);
-        // this.nextMove = new Move(cell);
+        
         board.getBoard()[row * Game.SIZE + col] = cell; // make the robot move
 
         moves.add(new Move(0, cell));
@@ -566,7 +620,7 @@ class PlayerRobot extends Player {
      * @param scanner java.util.Scanner
      * @param board   game board
      */
-    private void MoveNextMedium(Scanner scanner, GameTTTBoard board) {
+    private void MoveNextMedium(Scanner scanner, Board board) {
         Cell oppCell = isFirst() ? new Cell(Game.CELL_O) : new Cell(Game.CELL_X); // opponent player
 
         /**
@@ -578,7 +632,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[2].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(0, 2, Game.CELL_X) : new Cell(0, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[2] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -588,7 +642,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[2].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 1, Game.CELL_X) : new Cell(0, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[1] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -598,7 +652,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[2].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 0, Game.CELL_X) : new Cell(0, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[0] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -610,7 +664,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[5].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(1, 2, Game.CELL_X) : new Cell(1, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[5] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -620,7 +674,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[5].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[4] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -630,7 +684,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[5].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 0, Game.CELL_X) : new Cell(1, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[3] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -642,7 +696,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(2, 2, Game.CELL_X) : new Cell(2, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[8] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -652,7 +706,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(2, 1, Game.CELL_X) : new Cell(2, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[7] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -662,7 +716,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(2, 0, Game.CELL_X) : new Cell(2, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[6] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -674,7 +728,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[6].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(2, 0, Game.CELL_X) : new Cell(2, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[6] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -684,7 +738,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[6].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 0, Game.CELL_X) : new Cell(1, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[3] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -694,7 +748,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[6].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 0, Game.CELL_X) : new Cell(0, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[0] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -706,7 +760,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[7].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(2, 1, Game.CELL_X) : new Cell(2, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[7] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -716,7 +770,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[7].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[4] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -726,7 +780,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[7].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 1, Game.CELL_X) : new Cell(0, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[1] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -738,7 +792,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(2, 2, Game.CELL_X) : new Cell(2, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[8] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -748,7 +802,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 2, Game.CELL_X) : new Cell(1, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[5] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -758,7 +812,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 2, Game.CELL_X) : new Cell(0, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[2] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -770,7 +824,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(2, 2, Game.CELL_X) : new Cell(2, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[8] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -780,7 +834,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[4] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -790,7 +844,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 0, Game.CELL_X) : new Cell(0, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[0] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -802,7 +856,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[6].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(2, 0, Game.CELL_X) : new Cell(2, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[6] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -812,7 +866,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[6].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[4] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -822,7 +876,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[6].getType() == getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 2, Game.CELL_X) : new Cell(0, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[2] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -837,7 +891,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[2].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(0, 2, Game.CELL_X) : new Cell(0, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[2] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -847,7 +901,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[2].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 1, Game.CELL_X) : new Cell(0, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[1] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -857,7 +911,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[2].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 0, Game.CELL_X) : new Cell(0, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[0] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -869,7 +923,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[5].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(1, 2, Game.CELL_X) : new Cell(1, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[5] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -879,7 +933,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[5].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[4] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -889,7 +943,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[5].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 0, Game.CELL_X) : new Cell(1, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[3] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -901,7 +955,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(2, 2, Game.CELL_X) : new Cell(2, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[8] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -911,7 +965,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(2, 1, Game.CELL_X) : new Cell(2, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[7] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -921,7 +975,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(2, 0, Game.CELL_X) : new Cell(2, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[6] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -933,7 +987,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[6].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(2, 0, Game.CELL_X) : new Cell(2, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[6] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -943,7 +997,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[6].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 0, Game.CELL_X) : new Cell(1, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[3] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -953,7 +1007,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[6].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 0, Game.CELL_X) : new Cell(0, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[0] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -965,7 +1019,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[7].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(2, 1, Game.CELL_X) : new Cell(2, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[7] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -975,7 +1029,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[7].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[4] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -985,7 +1039,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[7].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 1, Game.CELL_X) : new Cell(0, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[1] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -997,7 +1051,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(2, 2, Game.CELL_X) : new Cell(2, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[8] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -1007,7 +1061,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 2, Game.CELL_X) : new Cell(1, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[5] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -1017,7 +1071,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 2, Game.CELL_X) : new Cell(0, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[2] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -1029,7 +1083,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(2, 2, Game.CELL_X) : new Cell(2, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[8] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -1039,7 +1093,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[4] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -1049,7 +1103,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[8].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 0, Game.CELL_X) : new Cell(0, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[0] = cell; // make the robot move
             moves.add(new Move(0, cell));
         }
@@ -1060,7 +1114,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[6].getType() == Game.CELL_EMPTY) {
 
             Cell cell = this.isFirst ? new Cell(2, 0, Game.CELL_X) : new Cell(2, 0, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[6] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -1070,7 +1124,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[6].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(1, 1, Game.CELL_X) : new Cell(1, 1, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[4] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -1080,7 +1134,7 @@ class PlayerRobot extends Player {
                 board.getBoard()[6].getType() == oppCell.getType()) {
 
             Cell cell = this.isFirst ? new Cell(0, 2, Game.CELL_X) : new Cell(0, 2, Game.CELL_O);
-            // this.nextMove = new Move(cell);
+            
             board.getBoard()[2] = cell; // make the robot move
 
             moves.add(new Move(0, cell));
@@ -1095,15 +1149,14 @@ class PlayerRobot extends Player {
      * @param scanner java.util.Scanner
      * @param board   game board
      */
-    private void MoveNextHard(Scanner scanner, GameTTTBoard board) {
+    private void MoveNextHard(Scanner scanner, Board board) {
         // finding the ultimate move that favors the computer
         Move bestMove = miniMaxMove(board, this);
 
         int row = bestMove.getCell().getRow();
         int col = bestMove.getCell().getCol();
 
-        Cell cell = this.isFirst? new Cell(row, col, Game.CELL_X) : new Cell(row, col, Game.CELL_O);
-        // this.nextMove = new Move(cell);
+        Cell cell = this.isFirst ? new Cell(row, col, Game.CELL_X) : new Cell(row, col, Game.CELL_O);
         board.getBoard()[row * Game.SIZE + col] = cell; // make the robot move
     }
 
@@ -1114,58 +1167,77 @@ class PlayerRobot extends Player {
      * @param player current player
      * @return next best move
      */
-    public Move miniMaxMove(GameTTTBoard board, Player player) {
+    public Move miniMaxMove(Board board, Player player) {
         this.fc++;
+        this.depth++;
 
-        LinkedList<Cell> emptyCells = board.getEmptyCells();
-        LinkedList<Move> nextMoves = new LinkedList<>(); // a linkedlist to collect all the moves
+        LinkedList<Cell> availSpots = board.getEmptyCells();    // available spots
+        LinkedList<Move> nextMoves = new LinkedList<>();        // a LinkedList to collect all the moves
+        
+        // checks for the terminal states such as win, lose, and draw, and return a value accordingly        
+        Move curMove = (Move) (player.getCurMove().clone());
 
-        // checks for the terminal states such as win, lose, and draw, and return a value accordingly
-        if (board.checkWin(player)) {
+        if (((GameTTTBoard)board).checkWin(player)) {
             if (player.getClass().getName() == "PlayerHuman") {
-                Move move = (Move) (player.getCurMove().clone());
-                move.setScore(Game.SCORE_LOSS);
-
-                return move;
-            } else {
-                Move move = (Move) (player.getCurMove().clone());
-                move.setScore(Game.SCORE_WIN);
-                return move;
+                curMove.setScore(Game.SCORE_LOSS);                
+            } else {                
+                curMove.setScore(Game.SCORE_WIN);                
             }
-        } else if (emptyCells.size() == 0) {
-            return new Move();  // ?? move ->> [score: 0, cell: (-1, -1)]
+
+            this.depth--;
+
+            return curMove;
+
+        } else if (availSpots.size() == 0) {
+            curMove.setScore(Game.SCORE_DRAW);
+
+            this.depth--;
+
+            return curMove; 
         }
 
         // loop through available spots
-        for (Cell spot : emptyCells) {
-            Move curMove = new Move(spot);  // ?? curMove ->> [score: 0, cell: (spot.clone())]
+        for (Cell spot : availSpots) {
+            Move nextMove = new Move(spot);  // nextMove ->> [score: -10000, cell: (spot.clone())]
 
             // set the type of the availble spot to the current player's type
-            int curIndex = spot.getRow() * Game.SIZE + spot.getCol();
-            board.getBoard()[curIndex].setType(player.getType());
+            int curIndex = spot.getRow() * board.getSize() + spot.getCol(); // for easy debug purpose
+            int playerType = player.getType();  // for easy debug purpose
+
+            board.getBoard()[curIndex].setType(playerType);
 
             // collect the score resulted from calling minimax on the opponent of the current player
             Move result = null;
-
+            
             if (player.getClass().getName() == "PlayerRobot") {
-                result = miniMaxMove(board, new PlayerHuman(player.isFirst() ));    // ?? new PlayerHuman ->> this is problematic !!
+                PlayerHuman otherPlayer = new PlayerHuman();
+                otherPlayer.curMove = (Move) nextMove.clone();
+
+                otherPlayer.setType(player.getOppType());
+
+                result = miniMaxMove(board, otherPlayer);
 
             } else {
-                result = miniMaxMove(board, new PlayerRobot(player.isFirst(), Game.HARD));  // ?? new PlayerRobot ->> this is problematic !!
-            }
+                PlayerRobot otherPlayer = new PlayerRobot(Game.HARD);
+                otherPlayer.curMove = (Move) nextMove.clone();
 
-            curMove.setScore(result.getScore());
+                otherPlayer.setType(player.getOppType());
+
+                result = miniMaxMove(board, otherPlayer);             
+            }
+        
+            nextMove.setScore(result.getScore());
 
             // reset the spot type back to empty
             board.getBoard()[curIndex].setType(Game.CELL_EMPTY);
 
-            nextMoves.add(curMove); // push the object to the LinkedList
+            nextMoves.add(nextMove); // push the object to the LinkedList
         }
 
         // if it is the computer's turn, loop over the moves and choose the move with the highest score
         Move bestMove = new Move();
         if (player.getClass().getName() == "PlayerRobot") {
-            int bestScore = -10000;
+            int bestScore = Game.SCORE_MIN;
             for (Move move : nextMoves) {
                 if (move.getScore() > bestScore) {
                     bestScore = move.getScore();
@@ -1173,7 +1245,7 @@ class PlayerRobot extends Player {
                 }
             }
         } else { // else loop over the moves and choose the move with the lowest score
-            int bestScore = 10000;
+            int bestScore = Game.SCORE_MAX;
             for (Move move : nextMoves) {
                 if (move.getScore() < bestScore) {
                     bestScore = move.getScore();
@@ -1182,7 +1254,9 @@ class PlayerRobot extends Player {
             }
         }
 
-        return bestMove; // return the chosen move object from the Linkedlist to the higher depth
+        this.depth--;
+
+        return bestMove; // return the chosen move object from the Linkedlist to the higher level
     }
 }
 
@@ -1260,7 +1334,7 @@ class Cell implements Cloneable{
                 break;
         }
 
-        return strType + " @ (" + this.row + "," + this.col + ")";
+        return strType + " @ (" + this.row + "," + this.col + ")";  // for debug purpose
         // return strType;
     }
 
@@ -1548,12 +1622,12 @@ class Move implements Cloneable{
     private Cell cell;
 
     public Move() {
-        this.score = Game.SCORE_DRAW;
+        this.score = Game.SCORE_MIN;
         this.cell = new Cell();
     }
 
     public Move(Cell cell) {
-        this.score = Game.SCORE_DRAW;
+        this.score = Game.SCORE_MIN;
         this.cell = (Cell) cell.clone();
     }
 
