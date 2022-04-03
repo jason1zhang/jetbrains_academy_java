@@ -1287,7 +1287,6 @@ class PlayerRobot extends Player {
     }    
 
     /**
-     * @deprecated
      * 
      * Note: This function is the very first implementation of minimax function, but it's buggy.
      * 
@@ -1297,6 +1296,8 @@ class PlayerRobot extends Player {
      * @param player current player
      * @return next best move
      */
+    /*
+    @Deprecated
     public Move miniMaxMove_deprecated(Board board, Player player) {
         this.fc++;
 
@@ -1382,6 +1383,7 @@ class PlayerRobot extends Player {
 
         return bestMove; // return the chosen move object from the Linkedlist to the higher level
     }
+    */
 }
 
 class Cell implements Cloneable{
