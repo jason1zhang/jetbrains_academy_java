@@ -13,8 +13,9 @@ import java.util.Random;
  *      - 2.1: use a flattened 1D game board  to represent 2D board;
  *      - 2.2: clean up the code to make it more compact and beautiful
  *      - 2.3: think more deeply about object oriented design, and apply it into the code
- *      - 2.4: pass the tests in the jetbrains academy again
- *      - 2.5: debug the recurisve minimax algorithm, and not give up easily
+ *      - 2.4：keep improving the code with major or minor updates
+ *      - 2.5: pass the tests in the jetbrains academy again
+ *      - 2.6: debug the recurisve minimax algorithm, and not give up easily
  *
  * step 3: implement the hard level of robot player, using minimax algorithm
  *  A Minimax algorithm can be best defined as a recursive function that does the following things:
@@ -27,6 +28,8 @@ import java.util.Random;
  * @author Jason Zhang
  * @version 1.0
  * @since 2022-02-19
+ * 
+ * Done on 2022-04-03
  */
 
 public class GameTTT5 {
@@ -41,7 +44,6 @@ public class GameTTT5 {
         // game.testMiniMax();
     }
 }
-
 
 class Game {
     /**
@@ -190,10 +192,22 @@ class Game {
         // System.out.println("player one's moves: > " + playerOne.getMoves());
         // System.out.println("player two's moves: > " + playerTwo.getMoves());
 
+        /*
         Move bestMove = ((PlayerRobot)playerOne).miniMaxMove(this.board, playerOne);
         System.out.println("next best move: " + bestMove);
         System.out.println("number of minimax function calls: " + ((PlayerRobot)playerOne).getFc());
         System.out.println("depth of minimax game tree: " + ((PlayerRobot)playerOne).getDepth());
+        */
+        
+        // Move move = new Move(0, new Cell(1, 2, 0));
+        // playerOne.makeMove(move);
+
+        Move bestMove =  ((PlayerRobot)playerOne).getNextBestMove(this.board);
+        System.out.println("The next best move is " + bestMove);
+
+        // int bestScore = ((PlayerRobot)playerOne).miniMaxMove(this.board, 2, true);
+        // System.out.printf("The best score is {%d}\n", bestScore);
+    
     }
 
     /**
@@ -359,7 +373,7 @@ abstract class Player implements Cloneable{
     protected boolean isFirst;      // if it's first player
     protected boolean isMoving;     // if currently making move, but this flag is not used for now
 
-    protected int playerCellType;   // // 0: CELL_EMPTY; 1: CELL_X; 2: CELL_O
+    protected int playerCellType;   // 0: CELL_EMPTY; 1: CELL_X; 2: CELL_O
     protected int playerType;       // 1: ROBOT; 2: HUMAN
 
     protected Move curMove;
@@ -527,6 +541,7 @@ class PlayerHuman extends Player {
 
             row = strRow.toCharArray()[0] - '1';    // x coordinate starts from 0
             col = strCol.toCharArray()[0] - '1';    // y coordinate starts from 0
+
             if (row < 0 || row > 2 || col < 0 || col > 2) { // convert to the board coordinates
                 System.out.println("Coordinates should be from 1 to 3!");
                 continue;
@@ -549,7 +564,6 @@ class PlayerHuman extends Player {
 class PlayerRobot extends Player {
     private final int level;
     private int fc = 0;     // keep track of the function calls for the minimax function
-    private int depth = 0;  // depth of the minimax game tree
 
     public PlayerRobot() {
         super();
@@ -577,10 +591,6 @@ class PlayerRobot extends Player {
 
     public void resetFc() {
         this.fc = 0;
-    }
-
-    public int getDepth() {
-        return this.depth;
     }
 
     @Override
@@ -614,7 +624,7 @@ class PlayerRobot extends Player {
 
         // make the random move, and loop until robot makes valid move
         do {
-            row = rand.nextInt(board.getSize());
+            row = rand.nextInt(board.getSize());    
             col = rand.nextInt(board.getSize());
         } while (board.getBoard()[row * Game.SIZE + col].getCellType() != Game.CELL_EMPTY);
 
@@ -1162,7 +1172,8 @@ class PlayerRobot extends Player {
      */
     private void MoveNextHard(Scanner scanner, Board board) {
         // finding the ultimate move that favors the computer
-        Move bestMove = miniMaxMove(board, this);
+        // Move bestMove = miniMaxMove(board, this);
+        Move bestMove = getNextBestMove(board);
 
         int row = bestMove.getCell().getRow();
         int col = bestMove.getCell().getCol();
@@ -1172,40 +1183,144 @@ class PlayerRobot extends Player {
     }
 
     /**
+     * Get the next best move
+     * @param board game board
+     * @return next best move
+     */
+    public Move getNextBestMove(Board board) {
+        LinkedList<Move> nextMoves = new LinkedList<>();        // a LinkedList to collect all the moves    
+
+        LinkedList<Cell> availSpots = board.getEmptyCells();    // available spots
+
+        for (Cell spot : availSpots) {
+            Move nextMove = new Move(spot);
+            
+            int curIndex = spot.getRow() * board.getSize() + spot.getCol(); // for easy debug purpose
+            
+            // set the type of the availble spot to the current player's type
+            board.getBoard()[curIndex].setCellType(getPlayerCellType());
+
+            // This is the AI player, and the next move is not maximizing. 
+            // So the "isMaximizing" flag should be set to false.
+            nextMove.setScore(miniMaxMove(board, 0, false));
+
+            // reset the spot type back to empty
+            board.getBoard()[curIndex].setCellType(Game.CELL_EMPTY);
+
+            nextMoves.add(nextMove); // push the object to the LinkedList
+        }
+
+        // loop over the moves and choose the move with the highest score
+        Move bestMove = new Move();
+
+        int bestScore = Game.SCORE_MIN;
+        for (Move move : nextMoves) {
+            if (move.getScore() > bestScore) {
+                bestScore = move.getScore();
+                bestMove = move;
+            }
+        }
+
+        return bestMove;
+    }
+
+    /**
+     * minimax algorithm implementation 
+     * 
+     * @param board  game board
+     * @param depth how many levels down
+     * @param isMaximizing if it's maximizing player moving
+     * @return the score for the current position
+     */
+    public int miniMaxMove(Board board, int depth, boolean isMaximizing) {
+
+        LinkedList<Cell> availSpots = board.getEmptyCells();    // available spots 
+ 
+        if (((GameTTTBoard)board).checkWin(Game.CELL_X) || ((GameTTTBoard)board).checkWin(Game.CELL_O)) {
+            if (isMaximizing) {
+                return Game.SCORE_LOSS;
+            } else {
+                return Game.SCORE_WIN;
+            }
+        } else if (availSpots.size() == 0) {
+            return Game.SCORE_DRAW;
+        }
+
+        if (isMaximizing) {
+            int maxEval = Game.SCORE_MIN;
+
+            // loop through available spots
+            for (Cell spot : availSpots) {
+                // set the type of the availble spot to the current player's type
+                int curIndex = spot.getRow() * board.getSize() + spot.getCol(); // for easy debug purpose
+                board.getBoard()[curIndex].setCellType(getPlayerCellType());
+                
+                // after maximizing player's turn, it's minimizing player's turn
+                int eval = miniMaxMove(board, depth + 1, false);
+
+                board.getBoard()[curIndex].setCellType(Game.CELL_EMPTY);
+
+                maxEval = maxEval >= eval ? maxEval : eval;             
+            }
+
+            return maxEval;
+
+        } else {
+            int minEval = Game.SCORE_MAX;
+
+            // loop through available spots
+            for (Cell spot : availSpots) {
+                // set the type of the availble spot to the opponent player's type
+                int curIndex = spot.getRow() * board.getSize() + spot.getCol(); // for easy debug purpose
+                board.getBoard()[curIndex].setCellType(getOppPlayerCellType());
+
+                // after minimizing player's turn, it's maximizing player's turn
+                int eval = miniMaxMove(board, depth + 1, true);
+
+                board.getBoard()[curIndex].setCellType(Game.CELL_EMPTY);
+
+                minEval = minEval <= eval ? minEval : eval;    
+            }
+
+            return minEval;            
+        }
+    }    
+
+    /**
+     * @deprecated
+     * 
+     * Note: This function is the very first implementation of minimax function, but it's buggy.
+     * 
      * Implement the minimax algorithm to find the ultimate play on the game that favors the computer
      *
      * @param board  game board
      * @param player current player
      * @return next best move
      */
-    public Move miniMaxMove(Board board, Player player) {
+    public Move miniMaxMove_deprecated(Board board, Player player) {
         this.fc++;
-        this.depth++;
 
         LinkedList<Cell> availSpots = board.getEmptyCells();    // available spots
-        LinkedList<Move> nextMoves = new LinkedList<>();        // a LinkedList to collect all the moves
         
         // checks for the terminal states such as win, lose, and draw, and return a value accordingly        
         Move curMove = (Move) (player.getCurMove().clone());
 
-        if (((GameTTTBoard)board).checkWin(player)) {
+        if (((GameTTTBoard)board).checkWin(Game.CELL_X) || ((GameTTTBoard)board).checkWin(Game.CELL_O)) {
             if (player.getClass().getName() == "PlayerHuman") {
-                curMove.setScore(Game.SCORE_LOSS);                
-            } else {                
-                curMove.setScore(Game.SCORE_WIN);                
+                curMove.setScore(Game.SCORE_WIN);
+            } else {
+                curMove.setScore(Game.SCORE_LOSS);
             }
-
-            this.depth--;
 
             return curMove;
 
         } else if (availSpots.size() == 0) {
             curMove.setScore(Game.SCORE_DRAW);
 
-            this.depth--;
-
             return curMove; 
         }
+
+        LinkedList<Move> nextMoves = new LinkedList<>();        // a LinkedList to collect all the moves        
 
         // loop through available spots
         for (Cell spot : availSpots) {
@@ -1264,8 +1379,6 @@ class PlayerRobot extends Player {
                 }
             }
         }
-
-        this.depth--;
 
         return bestMove; // return the chosen move object from the Linkedlist to the higher level
     }
@@ -1615,16 +1728,35 @@ class GameTTTBoard extends Board {
      * @return true if this player wins otherwise false
      */
     public boolean checkWin(Player player) {
-        int playerType = player.getPlayerCellType();
+        int playerCellType = player.getPlayerCellType();
 
-        return (this.board[0].getCellType() == playerType && this.board[1].getCellType() == playerType && this.board[2].getCellType() == playerType) ||
-                (this.board[3].getCellType() == playerType && this.board[4].getCellType() == playerType && this.board[5].getCellType() == playerType) ||
-                (this.board[6].getCellType() == playerType && this.board[7].getCellType() == playerType && this.board[8].getCellType() == playerType) ||
-                (this.board[0].getCellType() == playerType && this.board[3].getCellType() == playerType && this.board[6].getCellType() == playerType) ||
-                (this.board[1].getCellType() == playerType && this.board[4].getCellType() == playerType && this.board[7].getCellType() == playerType) ||
-                (this.board[2].getCellType() == playerType && this.board[5].getCellType() == playerType && this.board[8].getCellType() == playerType) ||
-                (this.board[0].getCellType() == playerType && this.board[4].getCellType() == playerType && this.board[8].getCellType() == playerType) ||
-                (this.board[2].getCellType() == playerType && this.board[4].getCellType() == playerType && this.board[6].getCellType() == playerType);
+        return (this.board[0].getCellType() == playerCellType && this.board[1].getCellType() == playerCellType && this.board[2].getCellType() == playerCellType) ||
+                (this.board[3].getCellType() == playerCellType && this.board[4].getCellType() == playerCellType && this.board[5].getCellType() == playerCellType) ||
+                (this.board[6].getCellType() == playerCellType && this.board[7].getCellType() == playerCellType && this.board[8].getCellType() == playerCellType) ||
+                (this.board[0].getCellType() == playerCellType && this.board[3].getCellType() == playerCellType && this.board[6].getCellType() == playerCellType) ||
+                (this.board[1].getCellType() == playerCellType && this.board[4].getCellType() == playerCellType && this.board[7].getCellType() == playerCellType) ||
+                (this.board[2].getCellType() == playerCellType && this.board[5].getCellType() == playerCellType && this.board[8].getCellType() == playerCellType) ||
+                (this.board[0].getCellType() == playerCellType && this.board[4].getCellType() == playerCellType && this.board[8].getCellType() == playerCellType) ||
+                (this.board[2].getCellType() == playerCellType && this.board[4].getCellType() == playerCellType && this.board[6].getCellType() == playerCellType);
+    }
+
+    /**
+     * check if specified player cell type wins the game.
+     * 
+     * This function is used for minimax algorithm. Though it's not an optimal solution to the problem.
+     * 
+     * @param playerCellType player's cell type
+     * @return true if the specified player cell type wins otherwise false
+     */
+    public boolean checkWin(int playerCellType) {       
+        return (this.board[0].getCellType() == playerCellType && this.board[1].getCellType() == playerCellType && this.board[2].getCellType() == playerCellType) ||
+                (this.board[3].getCellType() == playerCellType && this.board[4].getCellType() == playerCellType && this.board[5].getCellType() == playerCellType) ||
+                (this.board[6].getCellType() == playerCellType && this.board[7].getCellType() == playerCellType && this.board[8].getCellType() == playerCellType) ||
+                (this.board[0].getCellType() == playerCellType && this.board[3].getCellType() == playerCellType && this.board[6].getCellType() == playerCellType) ||
+                (this.board[1].getCellType() == playerCellType && this.board[4].getCellType() == playerCellType && this.board[7].getCellType() == playerCellType) ||
+                (this.board[2].getCellType() == playerCellType && this.board[5].getCellType() == playerCellType && this.board[8].getCellType() == playerCellType) ||
+                (this.board[0].getCellType() == playerCellType && this.board[4].getCellType() == playerCellType && this.board[8].getCellType() == playerCellType) ||
+                (this.board[2].getCellType() == playerCellType && this.board[4].getCellType() == playerCellType && this.board[6].getCellType() == playerCellType);
     }
 }
 
