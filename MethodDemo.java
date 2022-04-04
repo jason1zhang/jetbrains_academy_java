@@ -25,6 +25,9 @@ public class MethodDemo {
                 case "getClass":
                     getClassDemo();
                     break;
+                case "NPE":
+                    NPEDemo();
+                    break;                    
                 case "none":
                     isDone = true;
                     System.out.println("\n");
@@ -44,8 +47,7 @@ public class MethodDemo {
      * @param scanner java.util.Scanner
      */
     private static void nextLineDemo(Scanner scanner) {
-        System.out.printf(
-                "\n*** This is to demo the usage of method \"nextLine()\" in the class java.util.Scanner. ***\n");
+        System.out.printf("\n*** This is to demo the usage of method \"nextLine()\" in the class java.util.Scanner. ***\n");
 
         System.out.print("next(): > ");
         String s1 = scanner.next();
@@ -80,6 +82,23 @@ public class MethodDemo {
 
         System.out.printf("Class of ojbect {%s} is {%s}\n", client2.toString(), client2.getClass().getName());
         System.out.printf("Class of ojbect {%s} is {%s}\n\n", employee2.toString(), employee2.getClass().getName());
+    }
+
+    /**
+     * demo the null pointer exception
+     */
+    public static void NPEDemo() {
+        String str1;
+        String str2 = "123";
+
+        if (str2.equals(str1 = "123")) {
+            str2 = null;
+        }
+
+        str1 = str2;
+        str2 = str1;
+
+        System.out.println(str2);
     }
 }
 
