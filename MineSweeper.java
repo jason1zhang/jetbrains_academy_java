@@ -1,10 +1,22 @@
+import java.util.Scanner;
+
 // package minesweeper;
 
 public class MineSweeper {
     public static void main(String[] args) {
         // write your code here
+        Scanner scanner = new Scanner(System.in);
+        int mines;
+
+        System.out.print("How many mines do you want on the field? > ");
+        mines = scanner.nextInt();
+
         MineField mineField = new MineField(MineField.SIZE);
+
+        mineField.generateMineField(mines);
         System.out.println(mineField);
+
+        scanner.close();
     }
 }
 
@@ -15,13 +27,18 @@ class MineField {
     final static int SIZE = 9;
 
     private int size;
-    private Cell[][] field;
+
+    private MineCell[][] field;
 
     public MineField(int size) {
         this.size = size;
-        this.field = new Cell[size][size];
+        this.field = new MineCell[size][size];     
 
-        generateMineField();
+        for (int i = 0; i < this.size; i++) {
+            for (int j = 0; j < this.size; j++) {
+                this.field[i][j] = new MineCell(MineCell.CELL_EMPTY);
+            }
+        }        
     }
 
     public int getSize() {
@@ -33,15 +50,27 @@ class MineField {
     }
 
     /**
-     * generate a random mine field
+     * generate the mine field with specified number of mines
+     * 
+     * @param mines number of mines
      */
-    public void generateMineField() {
-        int type;
+    public void generateMineField(int mines) {
+        int randNum;
+        int i = 0;
+        int j = 0;
 
-        for (int i = 0; i < this.size; i++) {
-            for (int j = 0; j < this.size; j++) {
-                type = Math.random() <= 0.5 ? Cell.CELL_EMPTY : Cell.CELL_MINE;
-                this.field[i][j] = new Cell(type);
+        // generate the k mines, uniformly at random
+        for (int mine = 0; mine < mines; mine++) {
+            while (true) {
+                randNum = (int) (Math.random() * (this.size * this.size));
+
+                i = randNum / this.size;
+                j = randNum % this.size;
+
+                if (this.field[i][j].getType() == MineCell.CELL_EMPTY) {
+                    this.field[i][j].setType(MineCell.CELL_MINE);
+                    break;
+                }
             }
         }
     }
@@ -60,7 +89,7 @@ class MineField {
     }
 }
 
-class Cell {
+class MineCell {
     /**
      * constants definition
      */
@@ -72,11 +101,11 @@ class Cell {
 
     private int type;
 
-    public Cell() {
+    public MineCell() {
         this.type = CELL_EMPTY;
     }
 
-    public Cell(int type) {
+    public MineCell(int type) {
         this.type = type;
     }
 
