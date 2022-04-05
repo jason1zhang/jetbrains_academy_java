@@ -28,9 +28,12 @@ public class MethodDemo {
                 case "NPE":
                     NPEDemo();
                     break;            
-                case "hyper":
+                case "hyper_fixed_sized_array":
                     hyperskill_fixed_sized_array();
-                    break;                              
+                    break; 
+                case "hyper_dynamic_array":
+                    hyperskill_dynamic_array();
+                    break;                                                  
                 case "none":
                     isDone = true;
                     System.out.println("\n");
@@ -129,6 +132,42 @@ public class MethodDemo {
             }
         }
         System.out.println(r);
+    }
+
+    /**
+     * hyperskill practice for dynamic array
+     * 
+     * Assume that the size and capacity of a dynamic array are equal to 2 and 4 respectively, 
+     * and the scaling factor is 2. After you perform nn insertions, the capacity of the array will become 1024. 
+     * What is the minimum possible value of n?
+     */
+    public static void hyperskill_dynamic_array() {
+        int current_size = 2;
+        int current_capacity = 4;
+        int terminal_capacity = 1024;
+        int scaling_factor = 2;
+
+        int free_capacity = current_capacity - current_size;
+        int n1 = (terminal_capacity - free_capacity ) / scaling_factor;
+        System.out.println(n1); 
+
+        // +1 because the additional capacity is allocated the moment size exceeds current capacity by 1.
+        int n2 = (terminal_capacity / scaling_factor) - current_size + 1;
+        System.out.println(n2);
+
+        /*
+         * Another solution:
+         * 
+         *It's very simple. Start with the fact that if the array size is 512 
+         * then that would be to fill it is necessary to add elements 510.
+         * Or
+         * To put it in words, I'd say it like this: Your array just doubled its size to 1024, 
+         * because you added 1 element more than its capacity was before it doubled. 
+         * Now think how many elements you have in your array, and keep in mind 
+         *that there were already two elements in it when you started. How many did you add to get to the current size?
+        */
+
+
     }
 }
 
