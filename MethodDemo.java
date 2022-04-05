@@ -27,7 +27,10 @@ public class MethodDemo {
                     break;
                 case "NPE":
                     NPEDemo();
-                    break;                    
+                    break;            
+                case "hyper":
+                    hyperskill_fixed_sized_array();
+                    break;                              
                 case "none":
                     isDone = true;
                     System.out.println("\n");
@@ -99,6 +102,33 @@ public class MethodDemo {
         str2 = str1;
 
         System.out.println(str2);
+    }
+
+    /**
+     * hyperskill practice for fixed sized array
+     */
+    public static void hyperskill_fixed_sized_array() {
+        int[] a = {3, 0, 3, 9, 2, 1};
+
+        int r = 7;
+        int i;
+        for (i = 0; i < a.length; i = i + 1) {
+            r += a[i] * a[i];
+        }
+        System.out.println(r);
+
+        r = 13;
+        r += a[a[0]];
+        r -= a[a[a.length - 1]];
+        System.out.println(r);
+
+        r = 0;
+        for (i = 0; i < a.length; i = i + 1) {
+            if (a[i] < a.length) {
+                r += a[i];
+            }
+        }
+        System.out.println(r);
     }
 }
 
