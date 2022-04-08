@@ -1,6 +1,7 @@
-import java.util.Scanner;
-
 // package minesweeper;
+
+import java.util.ArrayList;
+import java.util.Scanner;
 
 public class MineSweeper {
     public static void main(String[] args) {
@@ -14,7 +15,8 @@ public class MineSweeper {
         MineField mineField = new MineField(MineField.SIZE);
 
         mineField.generateMineField(mines);
-        System.out.println(mineField);
+
+        mineField.startSweeping(scanner);
 
         scanner.close();
     }
@@ -30,6 +32,8 @@ class MineField {
 
     private MineCell[][] field;
 
+    private ArrayList<MineCell> mineArray;  // an ArrayList contains all the mines
+
     public MineField(int size) {
         this.size = size;
         this.field = new MineCell[size][size];
@@ -39,6 +43,8 @@ class MineField {
                 this.field[i][j] = new MineCell(MineCell.CELL_EMPTY);
             }
         }
+
+        mineArray = new ArrayList<>();
     }
 
     public int getSize() {
@@ -69,6 +75,9 @@ class MineField {
 
                 if (this.field[i][j].getType() == MineCell.CELL_EMPTY) {
                     this.field[i][j].setType(MineCell.CELL_MINE);
+                    
+                    mineArray.add(this.field[i][j]);
+
                     break;
                 }
             }
@@ -114,7 +123,97 @@ class MineField {
                     }
 
                     this.field[i][j].setMinesAdj(minesAround);
+                    
+                    if (minesAround > 0) {
+                        this.field[i][j].setState(CellState.MARKED_NUMBER);
+                    }
                 }
+            }
+        }
+    }
+
+    /**
+     * Start sweeping the mines
+     * 
+     * @param scanner Scanner
+     */
+    public void startSweeping(Scanner scanner) {
+        int row; // x coordinate
+        int col; // y coordinate
+
+        String strRow;
+        String strCol;
+
+        ArrayList<MineCell> MarkedWrongCells = new ArrayList<>();
+
+        MineCell curCell = null;
+
+        System.out.println(this);  // draw the mine field
+
+        while (true) {
+            System.out.print("Set/delete mines marks (x and y coordinates): > ");
+            strRow = scanner.next();
+
+            if (strRow.length() > 1 || strRow.toCharArray()[0] - '0' < 1 || strRow.toCharArray()[0] - '0' > this.size) {
+                System.out.println("You should enter valid row numbers!");
+
+                scanner.nextLine(); // Important! Skip the rest of the line to get rid of the carriage return
+                continue;
+            }
+
+            strCol = scanner.next();
+            if (strCol.length() > 1 || strCol.toCharArray()[0] - '0' < 1 || strCol.toCharArray()[0] - '0' > this.size) {
+                System.out.println("You should enter valid col numbers!");
+                continue;
+            }
+
+            row = strRow.toCharArray()[0] - '1';    // x coordinate starts from 0
+            col = strCol.toCharArray()[0] - '1';    // y coordinate starts from 0
+
+            curCell = this.field[row][col];
+
+            switch (curCell.getState()) {
+                case UNMARKED:
+                    // curCell.setState(CellState.MARKED);                    
+                    if (curCell.getType() == MineCell.CELL_MINE) {
+                        curCell.setState(CellState.MARKED_RIGHT);
+
+                        if (MarkedWrongCells.contains(curCell)) {
+                            MarkedWrongCells.remove(curCell);
+                        }
+                    } else {
+                        curCell.setState(CellState.MARKED_WRONG);
+                        MarkedWrongCells.add(curCell);
+                    }
+                    break;
+
+                case MARKED_RIGHT:
+                    curCell.setState(CellState.UNMARKED);
+                    break;
+
+                case MARKED_WRONG:
+                    curCell.setState(CellState.UNMARKED);
+                    MarkedWrongCells.remove(curCell);   // Important! remember to remove it from the "MarkedWrongCells" ArrayList
+                    break;
+
+                case MARKED_NUMBER:
+                    System.out.println("There is a number here!");
+                    continue;
+            }
+
+            System.out.println(this);  // draw the mine field
+
+            boolean markedAllCorrect = true;
+            for (MineCell cell : mineArray) {
+                if (cell.getState() == CellState.UNMARKED) {
+                    markedAllCorrect = false;
+                    break;
+                }
+            }
+
+            if (markedAllCorrect && MarkedWrongCells.isEmpty()) {
+                System.out.println("Congratulations! You found all the mines!");
+                break;
             }
         }
     }
@@ -122,12 +221,19 @@ class MineField {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
+        sb.append(" |123456789|\n");
+        sb.append("-|---------|\n");
+
         for (int i = 0; i < this.size; i++) {
+            sb.append((i + 1)  + "|");
+
             for (int j = 0; j < this.size; j++) {
                 sb.append(field[i][j]);
             }
-            sb.append("\n");
+            sb.append("|\n");
         }
+
+        sb.append("-|---------|\n");
 
         return sb.toString();
     }
@@ -151,11 +257,15 @@ class MineCell {
     private int type;
     private int minesAdj;
 
+    private CellState state;
+
     public MineCell() {
         this.row = -1;
         this.col = -1;
         this.type = CELL_EMPTY;
         this.minesAdj = -1;
+
+        this.state = CellState.UNMARKED;
     }
 
     public MineCell(int type) {
@@ -163,6 +273,8 @@ class MineCell {
         this.col = -1;
         this.type = type;
         this.minesAdj = -1;
+
+        this.state = CellState.UNMARKED;
     }
 
     public int getRow() {
@@ -196,17 +308,47 @@ class MineCell {
     public void setMinesAdj(int minesAdj) {
         this.minesAdj = minesAdj;
     }
+    
+    public CellState getState() {
+        return this.state;
+    }
+
+    public void setState(CellState state) {
+        this.state = state;
+    }
 
     @Override
     public String toString() {
-        if (this.type == CELL_MINE) {
-            return STR_MINE;
-        } else if (this.minesAdj > 0) {
-            return Integer.toString(this.minesAdj);
-        } else {
-            return STR_EMPTY;
-        }
+        switch (this.state) {
+            case MARKED_RIGHT:
+                return STR_MINE;
 
-        // return this.type == CELL_EMPTY ? STR_EMPTY : STR_MINE;        
+            case MARKED_WRONG:
+                return STR_MINE;
+
+            case MARKED_NUMBER:
+                return Integer.toString(this.minesAdj);
+
+            default:
+                return STR_EMPTY;
+        }
+    }
+}
+
+enum CellState {
+    UNMARKED(0),
+    // MARKED(1),
+    MARKED_WRONG(1),
+    MARKED_RIGHT(2),
+    MARKED_NUMBER(3);    
+
+    int state;
+
+    CellState(int state) {
+        this.state = state;
+    }
+
+    public int getState() {
+        return this.state;
     }
 }
