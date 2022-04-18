@@ -1,6 +1,7 @@
 // package minesweeper;
 
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.Scanner;
 
 /**
@@ -10,6 +11,8 @@ import java.util.Scanner;
  *      - Step 1: Add more state in the enum CellState
  *
  *      - step 2: Use "flood fill" algorithm to automatically explore the adjacent area if the cell is empty and has no mines around.
+ * 
+ *      - step 3: build test mine field
  *
  * @author Jason Zhang
  * @version 1.0
@@ -25,13 +28,15 @@ public class MineSweeper5 {
         System.out.print("How many mines do you want on the field? > ");
         mines = scanner.nextInt();
 
-        MineField mineField = new MineField(MineField.SIZE);
+        MineField mineField = new MineField(MineField.SIZE, mines); // construct a minefield with all empty cells
 
         System.out.println(mineField);  // draw the empty minefile
 
-        mineField.generateMineField(mines);
+        // mineField.placeAllMines();      // place the given number of mines into the field
 
-        mineField.startSweeping(scanner);
+        mineField.buildTestMineField();
+
+        mineField.startSweeping(scanner);   // start the game
 
         scanner.close();
     }
@@ -43,27 +48,33 @@ class MineField {
      */
     final static int SIZE = 9;
 
+    private int mines;
+
     private int size;
 
     private final MineCell[][] field;
 
     private final ArrayList<MineCell> mineArray;  // an ArrayList contains all the mines
 
-    private boolean firstMove;
+    private boolean isFirstMove;
+    private boolean isGameOver;
 
-    public MineField(int size) {
+    public MineField(int size, int mines) {
+        this.mines = mines;
         this.size = size;
         this.field = new MineCell[size][size];
 
         for (int i = 0; i < this.size; i++) {
             for (int j = 0; j < this.size; j++) {
                 this.field[i][j] = new MineCell(MineCell.CELL_EMPTY);
+                this.field[i][j].setState(CellState.UN_EXPLORED);
             }
         }
 
         mineArray = new ArrayList<>();
 
-        firstMove = true;
+        isFirstMove = true;
+        isGameOver = false;
     }
 
     public int getSize() {
@@ -75,49 +86,102 @@ class MineField {
     }
 
     /**
-     * generate the mine field with specified number of mines, and calculate the adjacent mines for each empty cell
-     *
-     * @param mines number of mines
+     * build the test mine field
      */
-    public void generateMineField(int mines) {
-        int i = 0;
-        int j = 0;
+    public void buildTestMineField() {
+        /*
+         |123456789|
+        -|---------|
+        1|11///1X..|
+        2|X1//12...|
+        3|11//1X...|
+        4|////1....|
+        5|11111....|
+        6|.X..X....|
+        7|.3X...X..|
+        8|.X..X211.|
+        9|...X.....|
+        -|---------|
+        */
+        placeOneMine(1, 7);
+        placeOneMine(2, 1);
+        
+        placeOneMine(3, 6);
+        placeOneMine(6, 2);
+        
+        placeOneMine(6, 5);
+        placeOneMine(7, 3);
 
-        // generate the k mines, uniformly at random
-        for (int mine = 0; mine < mines; mine++) {
-            placeMine();
-        }
+        placeOneMine(7, 7);
+        placeOneMine(8, 2);
 
-        int minesAround; // number of mines around a cell
+        placeOneMine(8, 5);
+        placeOneMine(9, 4);
 
-        // calculate the adjacent mines for each empty cell
-        for (i = 0; i < this.size; i++) {
-            for (j = 0; j < this.size; j++) {
-                minesAround = calcAdjMines(i, j);
-
-                this.field[i][j].setMinesAdj(minesAround);
-
-                if (minesAround > 0) {
-                    this.field[i][j].setState(CellState.EXPLORED_NUMBER);         
-                } 
-            }
-        }
+        calcAdjMines();
     }
 
     /**
-     * place a mine on the mine field
+     * place the specified number of mines into the field, and calculate the adjacent mines for each empty cell
+     *
      */
-    private void placeMine() {
+    public void placeAllMines() {
+        // generate the k mines, uniformly at random
+        for (int mine = 0; mine < this.mines; mine++) {
+            placeOneMine();
+        }
+
+        calcAdjMines();
+    }
+
+    /**
+     * calculate the calcuate adjacent mines for all empty cells on the mine field.
+     */
+    private void calcAdjMines() {
+        int minesAround; // number of mines around a cell
+
+        // calculate the adjacent mines for each empty cell
+        for (int i = 0; i < this.size; i++) {
+            for (int j = 0; j < this.size; j++) {
+                minesAround = calcAdjMines(i, j);
+
+                this.field[i][j].setMinesAdj(minesAround);             
+            }
+        }
+    }
+    
+    /**
+     * place a mine on the specified location for buiding the test mine field
+     * 
+     * @param i row index
+     * @param j col index
+     */
+    private void placeOneMine(int i, int j) {
+        MineCell curCell = this.field[i - 1][j - 1];
+
+        curCell.setType(MineCell.CELL_MINE);
+        this.mineArray.add(curCell);
+    }
+
+
+    /**
+     * place a mine on the mine field randomly
+     */
+    private void placeOneMine() {
+        int i;
+        int j;
+        int randNum;
+
         while (true) {
             randNum = (int) (Math.random() * (this.size * this.size));
 
             i = randNum / this.size;
             j = randNum % this.size;
+            MineCell curCell = this.field[i][j];
 
-            if (this.field[i][j].getType() == MineCell.CELL_EMPTY) {
-                this.field[i][j].setType(MineCell.CELL_MINE);
-
-                this.mineArray.add(this.field[i][j]);
+            if (curCell.getType() == MineCell.CELL_EMPTY && curCell.getState() == CellState.UN_EXPLORED) {
+                curCell.setType(MineCell.CELL_MINE);
+                this.mineArray.add(curCell);
 
                 break;
             }
@@ -125,7 +189,8 @@ class MineField {
     }
 
     /**
-     * calcuate the mines around an empty cell
+     * calcuate the mines around a cell.
+     * If the cell has mine in it, always return 0.
      * 
      * @param i the x coordinate (row)
      * @param j the y coordinate (col)
@@ -181,12 +246,11 @@ class MineField {
 
         String strRow;
         String strCol;
+        String strCmd;
 
         ArrayList<MineCell> MarkedWrongCells = new ArrayList<>();
 
         MineCell curCell = null;
-
-        // System.out.println(this);  // draw the mine field
 
         while (true) {
             System.out.print("Set/unset mines marks or claim a cell as free: > ");
@@ -202,7 +266,17 @@ class MineField {
             strCol = scanner.next();
             if (strCol.length() > 1 || strCol.toCharArray()[0] - '0' < 1 || strCol.toCharArray()[0] - '0' > this.size) {
                 System.out.println("You should enter valid col numbers!");
+
+                scanner.nextLine();
                 continue;
+            }
+
+            strCmd = scanner.next();    // "free" or "mine"
+            if (!(strCmd.equals("free") || strCmd.equals("mine"))) {
+                System.out.println("You should enter valid command - \"free\" or \"mine\"!");
+
+                scanner.nextLine();
+                continue;                
             }
 
             // row = strRow.toCharArray()[0] - '1';    // x coordinate starts from 0
@@ -215,46 +289,91 @@ class MineField {
 
             curCell = this.field[row][col];
 
-            // Important! below code is not finished, and needs to continue working on it
-            if (firstMove) {
-                if (curCell.getType() == MineCell.CELL_MINE) {
-                    curCell.setType(MineCell.CELL_EMPTY);
-                    placeMine();
+            if (this.isFirstMove) {
+                if (strCmd.equals("mine")) {
+                    if (curCell.getType() == MineCell.CELL_MINE) {
+                        curCell.setState(CellState.MARKED_MINE_RIGHT);
+                    } else {
+                        curCell.setState(CellState.MARKED_MINE_WRONG);
+                        MarkedWrongCells.add(curCell);
+                    }
+                } else {
+                    if ((curCell.getType() == MineCell.CELL_MINE)) {
+                        curCell.setType(MineCell.CELL_EMPTY);
+
+                        // set the state to EXPLORED_FREE for now, so that the call to placeOneMine() won't place the mine in the cell again.
+                        // and the state may change according to the number of adjacent mines.
+                        curCell.setState(CellState.EXPLORED_FREE);  
+    
+                        placeOneMine();
+
+                        if (curCell.getMinesAdj() == 0) {
+                            curCell.setState(CellState.EXPLORED_FREE);
+                        } else {
+                            curCell.setState(CellState.EXPLORED_NUMBER);
+                        }
+
+                    } else {
+                        if (curCell.getMinesAdj() == 0) {
+                            curCell.setState(CellState.EXPLORED_FREE);
+                        } else {
+                            curCell.setState(CellState.EXPLORED_NUMBER);
+                        }                        
+                    }
+                }
+
+                this.isFirstMove = false;
+
+            } else {
+                if (strCmd.equals("mine")) {
+                    if (curCell.getState() == CellState.UN_EXPLORED) {
+                        if (curCell.getType() == MineCell.CELL_MINE) {
+                            curCell.setState(CellState.MARKED_MINE_RIGHT);
+                        } else {
+                            curCell.setState(CellState.MARKED_MINE_WRONG);
+                            MarkedWrongCells.add(curCell);
+                        }                        
+                    } else if (curCell.getState() == CellState.MARKED_MINE_RIGHT) {
+                        curCell.setState(CellState.UN_EXPLORED);
+                    } else if (curCell.getState() == CellState.MARKED_MINE_WRONG) {
+                        curCell.setState(CellState.UN_EXPLORED);
+                        MarkedWrongCells.remove(curCell);
+                    } else {
+                        System.out.printf("The coordinates {%d, %d} you entered are invalid, please re-enter the command!\n", row, col);
+                        break;
+                    }
+                } else {
+                    if (curCell.getType() == MineCell.CELL_MINE) {
+                        curCell.setState(CellState.EXPLORED_MINE);
+
+                        for (MineCell cell : mineArray) {
+                            cell.setState(CellState.EXPLORED_MINE);
+                        }
+
+                        isGameOver = true;
+                    } else {
+                        if (curCell.getMinesAdj() == 0) {
+                            curCell.setState(CellState.EXPLORED_FREE);
+                        } else {
+                            curCell.setState(CellState.EXPLORED_NUMBER);
+                        }
+                    }
                 }
             }
 
-            switch (curCell.getState()) {
-                case UN_EXPLORED:
-                    // curCell.setState(CellState.MARKED);                    
-                    if (curCell.getType() == MineCell.CELL_MINE) {
-                        curCell.setState(CellState.EXPLORED_MINE_CORRECT);
-
-                        MarkedWrongCells.remove(curCell);
-                    } else {
-                        curCell.setState(CellState.EXPLORED_MINE_WRONG);
-                        MarkedWrongCells.add(curCell);
-                    }
-                    break;
-
-                case EXPLORED_MINE_CORRECT:
-                    curCell.setState(CellState.UN_EXPLORED);
-                    break;
-
-                case EXPLORED_MINE_WRONG:
-                    curCell.setState(CellState.UN_EXPLORED);
-                    MarkedWrongCells.remove(curCell);   // Important! remember to remove it from the "MarkedWrongCells" ArrayList
-                    break;
-
-                case EXPLORED_NUMBER:
-                    System.out.println("There is a number here!");
-                    continue;
+            if (curCell.getState() == CellState.EXPLORED_FREE) {
+                floodEmptyArea(row, col);
             }
 
             System.out.println(this);  // draw the mine field
+            if (isGameOver) {
+                    System.out.println("You stepped on a mine and failed!");
+                    return;
+            }
 
             boolean markedAllCorrect = true;
             for (MineCell cell : mineArray) {
-                if (cell.getState() == CellState.UN_EXPLORED) {
+                if (cell.getState() != CellState.MARKED_MINE_RIGHT) {
                     markedAllCorrect = false;
                     break;
                 }
@@ -265,8 +384,44 @@ class MineField {
                 break;
             }
         }
+    }    
+
+    /**
+     * apply "Flood Fill" algorithm to expand the empty area if the current cell is empty and has no mines around it.
+     * 
+     * @param i row index
+     * @param j col index
+     */
+    private void floodEmptyArea(int i, int j) {
+        if (i < 0 || i >= this.size || j < 0 || j >= this.size) {
+            return;
+        }
+        
+        MineCell curCell = this.field[i][j];
+        if (curCell.getIsVisited() || curCell.getType() == MineCell.CELL_MINE 
+            || curCell.getState() == CellState.MARKED_MINE_RIGHT || curCell.getState() == CellState.MARKED_MINE_WRONG) {
+            return;
+        }
+
+        // If a cell is empty and has mines around it, only that cell is explored, revealing the number of mines around it.
+        if (curCell.getType() == MineCell.CELL_EMPTY && curCell.getMinesAdj() != 0) {
+            curCell.setState(CellState.EXPLORED_NUMBER);
+            curCell.setIsVisited(true);
+            return;
+        }
+
+        curCell.setIsVisited(true);
+        curCell.setState(CellState.EXPLORED_FREE);
+    
+        floodEmptyArea(i - 1, j);
+        floodEmptyArea(i + 1, j);
+        floodEmptyArea(i, j - 1);
+        floodEmptyArea(i, j + 1);        
+
+        return;
     }
 
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
@@ -298,8 +453,10 @@ class MineCell {
     final public static int CELL_EMPTY = 0;
     final public static int CELL_MINE = 1;
 
-    final static String STR_EMPTY = ".";
-    final static String STR_MINE = "*";
+    final static String STR_UN_EXPLORED = ".";              // unexplored cell
+    final static String STR_EXPLORED_FREE = "/";            // explored free cell without mines around it
+    final static String STR_EXPLORED_MINE = "X";            // explored cell with mine in it
+    final static String STR_UN_EXPLORED_MARKED = "*";       // unexplored marked cell
 
     private int row;
     private int col;
@@ -308,6 +465,8 @@ class MineCell {
 
     private CellState state;
 
+    private boolean isVisited;  // for "Flood Fill" algorithm
+
     public MineCell() {
         this.row = -1;
         this.col = -1;
@@ -315,6 +474,7 @@ class MineCell {
         this.minesAdj = -1;
 
         this.state = CellState.UN_EXPLORED;
+        this.isVisited = false;
     }
 
     public MineCell(int type) {
@@ -324,6 +484,7 @@ class MineCell {
         this.minesAdj = -1;
 
         this.state = CellState.UN_EXPLORED;
+        this.isVisited = false;
     }
 
     public int getRow() {
@@ -366,29 +527,49 @@ class MineCell {
         this.state = state;
     }
 
+    public boolean getIsVisited() {
+        return this.isVisited;
+    }
+
+    public void setIsVisited(boolean isVisited) {
+        this.isVisited = isVisited;
+    }
+
     @Override
     public String toString() {
         switch (this.state) {
-            case EXPLORED_MINE_CORRECT:
+            case UN_EXPLORED:
+                return STR_UN_EXPLORED;
 
-            case EXPLORED_MINE_WRONG:
-                return STR_MINE;
+            case EXPLORED_FREE:
+                return STR_EXPLORED_FREE;
 
             case EXPLORED_NUMBER:
                 return Integer.toString(this.minesAdj);
 
-            default:
-                return STR_EMPTY;
+            case EXPLORED_MINE:
+                return STR_EXPLORED_MINE;
+
+            case MARKED_MINE_WRONG:
+                return STR_UN_EXPLORED_MARKED;
+                
+            case MARKED_MINE_RIGHT:
+                return STR_UN_EXPLORED_MARKED;
         }
+
+        return null;
     }
 }
 
 enum CellState {
-    UN_EXPLORED(0),
-    EXPLORED_FREE(1),
-    EXPLORED_NUMBER(2),
-    EXPLORED_MINE_WRONG(3),
-    EXPLORED_MINE_CORRECT(4);
+    UN_EXPLORED(0),             // cell unexplored
+
+    EXPLORED_FREE(1),           // cell is empty, and explored with no mines around
+    EXPLORED_NUMBER(2),         // cell is empty, and explored with some mines around
+    EXPLORED_MINE(3),           // cell has mine in it, and explore it, and then game over
+
+    MARKED_MINE_WRONG(4),       // cell is empty, and mark it with "mine"
+    MARKED_MINE_RIGHT(5);       // cell has mine in it, and mark it with "mine"
 
     final int state;
 
