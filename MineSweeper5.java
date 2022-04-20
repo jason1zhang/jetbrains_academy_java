@@ -1,7 +1,6 @@
 // package minesweeper;
 
 import java.util.ArrayList;
-import java.util.Currency;
 import java.util.Scanner;
 
 /**
@@ -12,7 +11,7 @@ import java.util.Scanner;
  *
  *      - step 2: Use "flood fill" algorithm to automatically explore the adjacent area if the cell is empty and has no mines around.
  * 
- *      - step 3: build test mine field
+ *      - step 3: build test minefields
  *
  * @author Jason Zhang
  * @version 1.0
@@ -34,7 +33,7 @@ public class MineSweeper5 {
 
         // mineField.placeAllMines();      // place the given number of mines into the field
 
-        mineField.buildTestMineField();
+        mineField.buildTestMineField(4);
 
         mineField.startSweeping(scanner);   // start the game
 
@@ -87,8 +86,28 @@ class MineField {
 
     /**
      * build the test mine field
+     */    
+    public void buildTestMineField(int field) {
+        switch (field) {
+            case 1:
+                buildTestMineField1();
+                break;
+            case 2:
+                buildTestMineField2();
+                break;
+            case 3:
+                buildTestMineField3();
+                break;                
+            case 4:
+                buildTestMineField4();
+                break;                  
+        }
+    }
+
+    /**
+     * build the test mine field 1
      */
-    public void buildTestMineField() {
+    private void buildTestMineField1() {
         /*
          |123456789|
         -|---------|
@@ -103,6 +122,7 @@ class MineField {
         9|...X.....|
         -|---------|
         */
+        
         placeOneMine(1, 7);
         placeOneMine(2, 1);
         
@@ -120,6 +140,94 @@ class MineField {
 
         calcAdjMines();
     }
+
+    /**
+     * build the test mine field 2
+     */
+    private void buildTestMineField2() {
+        /*
+         |123456789|
+        -|---------|
+        1|.*1//1*.*|
+        2|111//2231|
+        3|/////1*1/|
+        4|/////111/|
+        5|//////111|
+        6|/111//1*.|
+        7|23*1//111|
+        8|**21/////|
+        9|..1//////|
+        -|---------|
+        */
+
+        placeOneMine(1, 2);
+        placeOneMine(1, 7);
+        
+        placeOneMine(1, 9);
+        placeOneMine(3, 7);
+        
+        placeOneMine(6, 8);
+        placeOneMine(7, 3);
+
+        placeOneMine(8, 1);
+        placeOneMine(8, 2);
+
+        calcAdjMines();
+    }    
+
+    /**
+     * build the test mine field 3
+     */
+    private void buildTestMineField3() {
+        /*
+         |123456789|
+        -|---------|
+        1|/////////|
+        2|/////111/|
+        3|111//1.1/|
+        4|1.1//1121|
+        5|111//112.|
+        6|/////1.21|
+        7|/////111/|
+        8|111//////|
+        9|1.1//////|
+        -|---------|
+        */
+
+        placeOneMine(3, 7);
+        
+        placeOneMine(4, 2);
+        placeOneMine(5, 9);
+
+        placeOneMine(6, 7);
+        placeOneMine(9, 2);
+
+        calcAdjMines();
+    }
+
+    /**
+     * build the test mine field 4
+     */
+    private void buildTestMineField4() {
+        /*
+         |123456789|
+        -|---------|
+        1|/////////|
+        2|/////////|
+        3|/////////|
+        4|/////////|
+        5|111//////|
+        6|.*.//////|
+        7|111//////|
+        8|/////////|
+        9|/////////|
+        -|---------|
+        */
+
+        placeOneMine(6, 2);
+        
+        calcAdjMines();
+    }    
 
     /**
      * place the specified number of mines into the field, and calculate the adjacent mines for each empty cell
@@ -248,7 +356,7 @@ class MineField {
         String strCol;
         String strCmd;
 
-        ArrayList<MineCell> MarkedWrongCells = new ArrayList<>();
+        ArrayList<MineCell> markedWrongCells = new ArrayList<>();
 
         MineCell curCell = null;
 
@@ -295,7 +403,7 @@ class MineField {
                         curCell.setState(CellState.MARKED_MINE_RIGHT);
                     } else {
                         curCell.setState(CellState.MARKED_MINE_WRONG);
-                        MarkedWrongCells.add(curCell);
+                        markedWrongCells.add(curCell);
                     }
                 } else {
                     if ((curCell.getType() == MineCell.CELL_MINE)) {
@@ -331,16 +439,16 @@ class MineField {
                             curCell.setState(CellState.MARKED_MINE_RIGHT);
                         } else {
                             curCell.setState(CellState.MARKED_MINE_WRONG);
-                            MarkedWrongCells.add(curCell);
+                            markedWrongCells.add(curCell);
                         }                        
                     } else if (curCell.getState() == CellState.MARKED_MINE_RIGHT) {
                         curCell.setState(CellState.UN_EXPLORED);
                     } else if (curCell.getState() == CellState.MARKED_MINE_WRONG) {
                         curCell.setState(CellState.UN_EXPLORED);
-                        MarkedWrongCells.remove(curCell);
+                        markedWrongCells.remove(curCell);
                     } else {
                         System.out.printf("The coordinates {%d, %d} you entered are invalid, please re-enter the command!\n", row, col);
-                        break;
+                        continue;
                     }
                 } else {
                     if (curCell.getType() == MineCell.CELL_MINE) {
@@ -372,6 +480,7 @@ class MineField {
             }
 
             boolean markedAllCorrect = true;
+            // marking all the cells that have mines correctly
             for (MineCell cell : mineArray) {
                 if (cell.getState() != CellState.MARKED_MINE_RIGHT) {
                     markedAllCorrect = false;
@@ -379,7 +488,29 @@ class MineField {
                 }
             }
 
-            if (markedAllCorrect && MarkedWrongCells.isEmpty()) {
+            // opening all the safe cells so that only those with unexplored mines are left.
+            if (!markedAllCorrect) {
+                boolean isAllSafeOpened = true;     // flag for opening all the safe cells
+                for (int i = 0; i < this.size; i++) {
+                    for (int j = 0; j < this.size; j++) {
+                        if (this.field[i][j].getType() == MineCell.CELL_EMPTY && this.field[i][j].getState() == CellState.UN_EXPLORED) {
+                            isAllSafeOpened = false;
+                            break;  // break out of the inner loop
+                        }
+                    }
+
+                    if (!isAllSafeOpened) {
+                        break;  // break out of the outer loop
+                    }
+                }
+
+                if (isAllSafeOpened) {
+                    markedAllCorrect = true;
+                }
+            }
+
+            // check if the player wins
+            if (markedAllCorrect && markedWrongCells.isEmpty()) {
                 System.out.println("Congratulations! You found all the mines!");
                 break;
             }
@@ -398,8 +529,15 @@ class MineField {
         }
         
         MineCell curCell = this.field[i][j];
+        /*
         if (curCell.getIsVisited() || curCell.getType() == MineCell.CELL_MINE 
             || curCell.getState() == CellState.MARKED_MINE_RIGHT || curCell.getState() == CellState.MARKED_MINE_WRONG) {
+            return;
+        }
+        */
+
+        // Important! the below if statement may still have bug.
+        if (curCell.getIsVisited() || curCell.getType() == MineCell.CELL_MINE) {
             return;
         }
 
@@ -413,10 +551,15 @@ class MineField {
         curCell.setIsVisited(true);
         curCell.setState(CellState.EXPLORED_FREE);
     
-        floodEmptyArea(i - 1, j);
-        floodEmptyArea(i + 1, j);
-        floodEmptyArea(i, j - 1);
-        floodEmptyArea(i, j + 1);        
+        // explore all the cells around in 8 directions
+        floodEmptyArea(i - 1, j);       // explore up
+        floodEmptyArea(i + 1, j);       // explore down
+        floodEmptyArea(i, j - 1);       // explore left
+        floodEmptyArea(i, j + 1);       // explore right
+        floodEmptyArea(i - 1, j - 1);   // explore up left
+        floodEmptyArea(i - 1, j + 1);   // explore up right
+        floodEmptyArea(i + 1, j - 1);   // explore down left
+        floodEmptyArea(i + 1, j + 1);   // explore down right
 
         return;
     }
