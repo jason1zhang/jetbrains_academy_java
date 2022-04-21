@@ -16,6 +16,8 @@ import java.util.Scanner;
  * @author Jason Zhang
  * @version 1.0
  * @since 2022-04-10 
+ * 
+ * Done on 2022-04-22
  */
 
 public class MineSweeper5 {
@@ -31,9 +33,9 @@ public class MineSweeper5 {
 
         System.out.println(mineField);  // draw the empty minefile
 
-        // mineField.placeAllMines();      // place the given number of mines into the field
+        mineField.placeAllMines();      // place the given number of mines into the field
 
-        mineField.buildTestMineField(4);
+        // mineField.buildTestMineField(4);
 
         mineField.startSweeping(scanner);   // start the game
 
@@ -46,6 +48,8 @@ class MineField {
      * constants definition
      */
     final static int SIZE = 9;
+    final static String COMMAND_MARK = "mine";
+    final static String COMMAND_EXPLORE = "free";
 
     private int mines;
 
@@ -124,17 +128,14 @@ class MineField {
         */
         
         placeOneMine(1, 7);
-        placeOneMine(2, 1);
-        
+        placeOneMine(2, 1);        
         placeOneMine(3, 6);
-        placeOneMine(6, 2);
-        
+        placeOneMine(6, 2);        
         placeOneMine(6, 5);
-        placeOneMine(7, 3);
 
+        placeOneMine(7, 3);
         placeOneMine(7, 7);
         placeOneMine(8, 2);
-
         placeOneMine(8, 5);
         placeOneMine(9, 4);
 
@@ -161,14 +162,12 @@ class MineField {
         */
 
         placeOneMine(1, 2);
-        placeOneMine(1, 7);
-        
+        placeOneMine(1, 7);        
         placeOneMine(1, 9);
-        placeOneMine(3, 7);
-        
+        placeOneMine(3, 7);        
         placeOneMine(6, 8);
-        placeOneMine(7, 3);
 
+        placeOneMine(7, 3);
         placeOneMine(8, 1);
         placeOneMine(8, 2);
 
@@ -194,11 +193,9 @@ class MineField {
         -|---------|
         */
 
-        placeOneMine(3, 7);
-        
+        placeOneMine(3, 7);        
         placeOneMine(4, 2);
         placeOneMine(5, 9);
-
         placeOneMine(6, 7);
         placeOneMine(9, 2);
 
@@ -380,7 +377,7 @@ class MineField {
             }
 
             strCmd = scanner.next();    // "free" or "mine"
-            if (!(strCmd.equals("free") || strCmd.equals("mine"))) {
+            if (!(strCmd.equals(COMMAND_EXPLORE) || strCmd.equals(COMMAND_MARK))) {
                 System.out.println("You should enter valid command - \"free\" or \"mine\"!");
 
                 scanner.nextLine();
@@ -398,7 +395,7 @@ class MineField {
             curCell = this.field[row][col];
 
             if (this.isFirstMove) {
-                if (strCmd.equals("mine")) {
+                if (strCmd.equals(COMMAND_MARK)) {
                     if (curCell.getType() == MineCell.CELL_MINE) {
                         curCell.setState(CellState.MARKED_MINE_RIGHT);
                     } else {
@@ -408,12 +405,15 @@ class MineField {
                 } else {
                     if ((curCell.getType() == MineCell.CELL_MINE)) {
                         curCell.setType(MineCell.CELL_EMPTY);
+                        
 
                         // set the state to EXPLORED_FREE for now, so that the call to placeOneMine() won't place the mine in the cell again.
                         // and the state may change according to the number of adjacent mines.
-                        curCell.setState(CellState.EXPLORED_FREE);  
-    
+                        curCell.setState(CellState.EXPLORED_FREE);
+                        this.mineArray.remove(curCell);
+
                         placeOneMine();
+                        calcAdjMines(); // Important! re-calculate the adjacent mines for the cells in the minefield
 
                         if (curCell.getMinesAdj() == 0) {
                             curCell.setState(CellState.EXPLORED_FREE);
@@ -433,7 +433,7 @@ class MineField {
                 this.isFirstMove = false;
 
             } else {
-                if (strCmd.equals("mine")) {
+                if (strCmd.equals(COMMAND_MARK)) {
                     if (curCell.getState() == CellState.UN_EXPLORED) {
                         if (curCell.getType() == MineCell.CELL_MINE) {
                             curCell.setState(CellState.MARKED_MINE_RIGHT);
@@ -529,14 +529,7 @@ class MineField {
         }
         
         MineCell curCell = this.field[i][j];
-        /*
-        if (curCell.getIsVisited() || curCell.getType() == MineCell.CELL_MINE 
-            || curCell.getState() == CellState.MARKED_MINE_RIGHT || curCell.getState() == CellState.MARKED_MINE_WRONG) {
-            return;
-        }
-        */
 
-        // Important! the below if statement may still have bug.
         if (curCell.getIsVisited() || curCell.getType() == MineCell.CELL_MINE) {
             return;
         }
@@ -590,9 +583,7 @@ class MineCell {
     /**
      * constants definition
      */
-
-    // setting CELL_EMPTY to 0 and CELL_MINE to 1 is essential, 
-    // especially when calculating the adjacent mines for each empty cell.
+    // setting CELL_EMPTY to 0 and CELL_MINE to 1 is essential,  because it's easier when calculating the adjacent mines for each empty cell.
     final public static int CELL_EMPTY = 0;
     final public static int CELL_MINE = 1;
 
