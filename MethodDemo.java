@@ -33,7 +33,11 @@ public class MethodDemo {
                     break; 
                 case "hyper_dynamic_array":
                     hyperskill_dynamic_array();
-                    break;                                                  
+                    break;                  
+                case "hyper_exception":
+                    String input = "0";
+                    hyperskill_exception(input);
+                    break;                                
                 case "none":
                     isDone = true;
                     System.out.println("\n");
@@ -166,8 +170,13 @@ public class MethodDemo {
          * Now think how many elements you have in your array, and keep in mind 
          *that there were already two elements in it when you started. How many did you add to get to the current size?
         */
+    }
 
-
+    private static void hyperskill_exception(String input) {
+        boolean result = Boolean.parseBoolean(input);
+        result = !result;
+        String output = String.valueOf(result);
+        System.out.println(output);        
     }
 }
 
