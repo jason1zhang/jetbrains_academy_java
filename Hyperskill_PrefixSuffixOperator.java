@@ -22,6 +22,11 @@ class Hyperskill_PrefixSuffixOperator {
         final String PREFIX = "__pref__";
         final String SUFFIX = "__suff__";
 
+        /*
+         * The UnaryOperator Interface<T> is a part of the java.util.function package which has been introduced since Java 8, 
+         * to implement functional programming in Java. It represents a function which takes in one argument and operates on it. 
+         * However what distinguishes it from a normal Function is that both its argument and return type are the same.
+        */
         UnaryOperator<String> operator = str -> {
             return PREFIX + str.trim() + SUFFIX;
         };
