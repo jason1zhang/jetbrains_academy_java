@@ -11,9 +11,15 @@ public class HelloFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(300, 300);
         setLocationRelativeTo(null);
-        setLayout(null);
+
+        initComponents();
+
+        setLayout(null);    // set absolute positioning of components
         setVisible(true);
 
+    }
+
+    private void initComponents() {
         JLabel nameLabel = new JLabel();
         nameLabel.setText("Your name");
         nameLabel.setBounds(40, 20, 100, 30);
