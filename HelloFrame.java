@@ -4,6 +4,16 @@ import java.awt.BorderLayout;
 
 import javax.swing.*;
 
+/**
+ * 
+ * This program is from Jetbrains Academy topic - Swing Components
+ * 
+ * @author Jason Zhang
+ * @version 1.0
+ * @since 2022-04-27
+ *
+ */
+
 public class HelloFrame extends JFrame {
 
     public HelloFrame() {
