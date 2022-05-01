@@ -20,10 +20,18 @@ public class StandardLogger {
         // put your code here
         Scanner scanner = new Scanner(System.in);
 
-        String input = scanner.nextLine();
-        String[] levels = input.split(" ");
+        // String input = scanner.nextLine();
+        // String[] levels = input.split(" ");
 
-        System.out.println(findSum(levels));
+        // System.out.println(findSum(levels));
+
+        int sum = 0;
+        while (scanner.hasNext()) {
+            String level = scanner.next().toUpperCase();
+            sum += Level.parse(level).intValue();
+        }
+        
+        System.out.println(sum);
         
         scanner.close();
     }
