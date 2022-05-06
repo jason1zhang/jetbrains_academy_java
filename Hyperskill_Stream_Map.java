@@ -32,9 +32,9 @@ public class Hyperskill_Stream_Map {
     public static int[] sortedAbsNumbers(String[] numbers) {
         // write your code here
         return Arrays.stream(numbers)
-                .map(number -> Math.abs(Integer.parseInt(number)))
+                .mapToInt(Integer::parseInt)
+                .map(Math::abs)
                 .sorted()
-                .mapToInt(Integer::intValue)    // Convert Integer List to Integer Array
                 .toArray();
     }
 
