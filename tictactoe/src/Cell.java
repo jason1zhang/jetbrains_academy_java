@@ -84,6 +84,8 @@ public class Cell implements Cloneable{
 
         try {
             copy = (Cell) super.clone();
+            copy.setCellType(this.cellType);
+            
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
         }

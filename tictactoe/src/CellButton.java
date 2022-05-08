@@ -27,6 +27,10 @@ public class CellButton extends JButton {
         return this.cell;
     }
 
+    public void setCell(Cell cell) {
+        this.cell = (Cell)cell.clone();
+    }
+
     public boolean getIsClicked() {
         return this.isClicked;
     }

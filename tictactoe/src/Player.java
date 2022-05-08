@@ -113,5 +113,5 @@ abstract class Player implements Cloneable{
         return copy;
     }
 
-    // abstract protected void MoveNext(Scanner scanner, Board board);
+    abstract protected void MoveNext(Board board);
 }

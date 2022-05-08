@@ -1,5 +1,6 @@
 import javax.swing.JPanel;
 import java.awt.*;
+import java.util.*;
 
 public class Board extends JPanel{
     protected int size;
@@ -47,6 +48,23 @@ public class Board extends JPanel{
 
     public int getBoardSize() {
         return this.size;
+    }
+
+    /**
+     * get the empty cells on the board
+     *
+     * @return an LinkedList with empty cells
+     */
+    public LinkedList<Cell> getEmptyCells() {
+        LinkedList<Cell> emptyCells = new LinkedList<>();
+
+        for (CellButton cellButton : this.board) {
+            if (cellButton.getCell().getCellType() == Game.CELL_EMPTY) {
+                emptyCells.add(cellButton.getCell());
+            }
+        }
+
+        return emptyCells;
     }
 
     /**

@@ -4,46 +4,44 @@ import java.awt.event.*;
 
 public class TicTacToe extends JFrame {
 
-    // private Player playerOne;
-    // private Player playerTwo;
+    /**
+     * member variables
+     */    
+    private Player playerOne;
+    private Player playerTwo;
 
     private boolean isPlayerOneMove;    // who is moving now
 
     private Board board;
 
     private JLabel labelStatus;
-    private JButton buttonReset;
+    private JButton buttonStartReset;
+    private JButton buttonPlayer1;
+    private JButton buttonPlayer2;
 
     private int state;
 
     public TicTacToe() {
 
-        resetGame();
+        this.playerOne = null;
+        this.playerTwo = null;
+
+        this.isPlayerOneMove = true;
+        this.state = Game.NOT_STARTED;
 
         initComponents();
 
         actOnCellButton();
-
-        actOnResetButton();
+        actOnPlayerOneButton();
+        actOnPlayerTwoButton();
+        actOnStartResetButton();
 
         setVisible(true);
 
         // setLayout(null);
     }
 
-    /**
-     * reset the game parameters
-     */
-    private void resetGame() {
-        // this.playerOne = null;
-        // this.playerTwo = null;
-
-        this.isPlayerOneMove = true;
-        this.state = Game.NOT_STARTED;
-    }
-
     private void initComponents() {
-
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("Tic Tac Toe");
         setResizable(false);
@@ -52,6 +50,25 @@ public class TicTacToe extends JFrame {
 
         setLayout(new BorderLayout());
 
+        // construct a panel to hold  2 player button and start/reset button
+        JPanel panelButtons = new JPanel();
+        this.buttonPlayer1 = new JButton(Game.STR_HUMAN);
+        this.buttonPlayer1.setName("ButtonPlayer1");
+        this.buttonPlayer1.setHorizontalAlignment(SwingConstants.CENTER);
+
+        this.buttonPlayer2 = new JButton(Game.STR_HUMAN);
+        this.buttonPlayer2.setName("ButtonPlayer2");
+        this.buttonPlayer2.setHorizontalAlignment(SwingConstants.CENTER);
+
+        this.buttonStartReset = new JButton(Game.STR_START);
+        this.buttonStartReset.setName("ButtonStartReset");
+        this.buttonStartReset.setHorizontalAlignment(SwingConstants.CENTER);
+
+        panelButtons.setLayout(new GridLayout(1, 3));
+        panelButtons.add(buttonPlayer1);
+        panelButtons.add(buttonStartReset);
+        panelButtons.add(buttonPlayer2);
+        
         // construct a panel to hold status label and reset button
         JPanel panelStatus = new JPanel();
 
@@ -59,19 +76,17 @@ public class TicTacToe extends JFrame {
         this.labelStatus.setName("LabelStatus");
         this.labelStatus.setHorizontalAlignment(SwingConstants.CENTER);
 
-        this.buttonReset = new JButton("Reset");
-        this.buttonReset.setName("ButtonReset");
-        this.buttonReset.setHorizontalAlignment(SwingConstants.CENTER);
-
         panelStatus.setLayout(new BorderLayout(10, 10));
         panelStatus.add(labelStatus, BorderLayout.WEST);
-        panelStatus.add(buttonReset, BorderLayout.EAST);
-
+        
         // initialize the board
         this.board = new Board();
 
-        setLayout(new BorderLayout(10, 10));
+        // add the components to the frame
+        // setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(0, 0));
 
+        add(panelButtons, BorderLayout.NORTH);
         add(this.board, BorderLayout.CENTER);
         add(panelStatus, BorderLayout.SOUTH);
     }
@@ -89,24 +104,24 @@ public class TicTacToe extends JFrame {
             cell.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (state != Game.GAME_OVER) {
-                        if (cell.getIsClicked() == false) {
+                    if (state == Game.NOT_STARTED  || state == Game.GAME_OVER) {
+                        return;
+                    }
 
-                            if (isPlayerOneMove) {
-                                cell.setText(Game.STR_CELL_X);
-                                cell.getCell().setCellType(Game.CELL_X);
+                    if (cell.getIsClicked() == false) {
+                        if (isPlayerOneMove) {
+                            cell.setText(Game.STR_CELL_X);
+                            cell.getCell().setCellType(Game.CELL_X);
 
-                                isPlayerOneMove = false;
-                            } else {
-                                cell.setText(Game.STR_CELL_O);
-                                cell.getCell().setCellType(Game.CELL_O);
-
-                                isPlayerOneMove = true;
-                            }
-
+                            isPlayerOneMove = false;
                         } else {
-                            cell.setIsclicked(true);
+                            cell.setText(Game.STR_CELL_O);
+                            cell.getCell().setCellType(Game.CELL_O);
+
+                            isPlayerOneMove = true;
                         }
+                    } else {
+                        cell.setIsclicked(true);
                     }
 
                     state = checkState(); // check game state
@@ -135,20 +150,77 @@ public class TicTacToe extends JFrame {
     /**
      * add the listener for reset button
      */
-    public void actOnResetButton() {
-        this.buttonReset.addActionListener(new ActionListener() {
+    public void actOnStartResetButton() {
+        this.buttonStartReset.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                isPlayerOneMove = true;
-                state = Game.NOT_STARTED;
+                if (state == Game.NOT_STARTED) {
+                    state = Game.IN_PROGRESS;
 
-                board.clear();
+                    if (buttonPlayer1.getText() == Game.STR_HUMAN) {
+                        playerOne = new PlayerHuman();
+                    } else {
+                        playerOne = new PlayerRobot(Game.HARD);
+                    }
 
-                labelStatus.setText(Game.STR_NOT_STARTED);
+                    if (buttonPlayer2.getText() == Game.STR_HUMAN) {
+                        playerTwo = new PlayerHuman(false);
+                    } else {
+                        playerTwo = new PlayerRobot(false, Game.HARD);
+                    }
+
+                    buttonStartReset.setText(Game.STR_RESET);
+                    labelStatus.setText(Game.STR_IN_PROGRESS);
+                } else {
+                    isPlayerOneMove = true;
+                    state = Game.NOT_STARTED;
+
+                    playerOne = null;
+                    playerTwo = null;
+
+                    board.clear();
+
+                    labelStatus.setText(Game.STR_NOT_STARTED);
+                }
             }
         });
     }
 
+    /**
+     * add the listener for player1 button
+     */
+    public void actOnPlayerOneButton() {
+        this.buttonPlayer1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (state == Game.NOT_STARTED) {
+                    if (buttonPlayer1.getText() == Game.STR_HUMAN) {
+                        buttonPlayer1.setText(Game.STR_COMPUTER);
+                    } else {
+                        buttonPlayer1.setText(Game.STR_HUMAN);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * add the listener for player2 button
+     */
+    public void actOnPlayerTwoButton() {
+        this.buttonPlayer2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (state == Game.NOT_STARTED) {
+                    if (buttonPlayer2.getText() == Game.STR_HUMAN) {
+                        buttonPlayer2.setText(Game.STR_COMPUTER);
+                    } else {
+                        buttonPlayer2.setText(Game.STR_HUMAN);
+                    }
+                }
+            }
+        });
+    }
 
     /**
      * check the game state

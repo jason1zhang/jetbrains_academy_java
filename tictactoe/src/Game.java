@@ -33,6 +33,19 @@ public class Game {
     final static int ROBOT = 1;
     final static int HUMAN = 2;
 
+    // String for human and computer
+    final static String STR_HUMAN = "Human";
+    final static String STR_COMPUTER = "Computer";
+
+    // robot level
+    final static int EASY = 0;
+    final static int MEDIUM = 1;
+    final static int HARD = 2;
+        
+    // String for start or reset the game
+    final static String STR_START = "Start";
+    final static String STR_RESET = "Reset";
+
     // score for the minmax function
     final static int SCORE_WIN = 10;
     final static int SCORE_LOSS = -10;
