@@ -30,6 +30,8 @@ public class Board extends JPanel{
             text = "" + chAlpha + chNum;
             // this.board[i] = new Cell(text, "Button" + text);
             this.board[i] = new CellButton(Game.STR_CELL_EMPTY, "Button" + text);
+            this.board[i].getCell().setCellType(Game.CELL_EMPTY);   // initialize to empty cell
+
             this.board[i].setFocusPainted(false);   // remove the border around the text of the active cell
 
             add(this.board[i]);

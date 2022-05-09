@@ -74,6 +74,9 @@ class PlayerRobot extends Player {
 
         Cell cell = this.isFirst ? new Cell(row, col, Game.CELL_X) : new Cell(row, col, Game.CELL_O);
         board.getBoard()[row * Game.SIZE + col].setCell(cell);  // make the robot move
+
+        // draw the cell
+        board.getBoard()[row * Game.SIZE + col].setText(this.isFirst ? Game.STR_CELL_X : Game.STR_CELL_O);
     }
 
     /**

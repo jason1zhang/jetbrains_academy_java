@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.concurrent.TimeUnit;
 
 public class TicTacToe extends JFrame {
 
@@ -9,6 +10,7 @@ public class TicTacToe extends JFrame {
      */    
     private Player playerOne;
     private Player playerTwo;
+    private Player currPlayer;  // current player
 
     private boolean isPlayerOneMove;    // who is moving now
 
@@ -21,6 +23,8 @@ public class TicTacToe extends JFrame {
 
     private int state;
 
+    private int secondsToSleep;
+
     public TicTacToe() {
 
         this.playerOne = null;
@@ -29,16 +33,16 @@ public class TicTacToe extends JFrame {
         this.isPlayerOneMove = true;
         this.state = Game.NOT_STARTED;
 
+        this.secondsToSleep = 5;
+
         initComponents();
 
-        actOnCellButton();
+        actOnCellButton2();
         actOnPlayerOneButton();
         actOnPlayerTwoButton();
         actOnStartResetButton();
 
         setVisible(true);
-
-        // setLayout(null);
     }
 
     private void initComponents() {
@@ -140,6 +144,73 @@ public class TicTacToe extends JFrame {
                             break;
                         case Game.IN_PROGRESS:
                             labelStatus.setText(Game.STR_IN_PROGRESS);
+                            isPlayerOneMove = !isPlayerOneMove; // continue playing the game by switching the side
+                            break;
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * add a listener for each cell of the field
+     */
+    public void actOnCellButton2() {
+        int size = this.board.getBoardSize();
+        CellButton[] cells = this.board.getBoard();
+
+        for (int i = 0; i < size * size; i++) {
+            CellButton cell = cells[i];
+            cells[i].getCell().setRow(i / size);
+            cells[i].getCell().setCol(i % size);
+
+            cell.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (state == Game.NOT_STARTED  || state == Game.GAME_OVER) {
+                        return;
+                    }
+
+                    if (currPlayer.getPlayerType() == Game.HUMAN) {                    
+                        if (cell.getText() == Game.STR_CELL_EMPTY) {
+                            if (currPlayer.getPlayerCellType() == Game.CELL_X) {
+                                cell.setText(Game.STR_CELL_X);
+                                cell.getCell().setCellType(Game.CELL_X);
+                            } else {
+                                cell.setText(Game.STR_CELL_O);
+                                cell.getCell().setCellType(Game.CELL_O);
+                            }
+                        }
+
+                        try {
+                            TimeUnit.SECONDS.sleep(secondsToSleep);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                        }
+
+                        currPlayer = currPlayer == playerOne ? playerTwo : playerOne;                        
+                        if (currPlayer.getPlayerType() == Game.ROBOT) {
+                            currPlayer.MoveNext(board);
+                            setVisible(true);
+                        }
+                    }
+
+                    state = checkState(); // check game state
+                    switch (state) {
+                        case Game.X_WIN:
+                            labelStatus.setText(Game.STR_X_WIN);
+                            state = Game.GAME_OVER;
+                            break;
+                        case Game.O_WIN:
+                            labelStatus.setText(Game.STR_O_WIN);
+                            state = Game.GAME_OVER;
+                            break;
+                        case Game.DRAW:
+                            labelStatus.setText(Game.STR_DRAW);
+                            state = Game.GAME_OVER;
+                            break;
+                        case Game.IN_PROGRESS:
+                            labelStatus.setText(Game.STR_IN_PROGRESS);                            
                             break;
                     }
                 }
@@ -171,6 +242,21 @@ public class TicTacToe extends JFrame {
 
                     buttonStartReset.setText(Game.STR_RESET);
                     labelStatus.setText(Game.STR_IN_PROGRESS);
+
+                    try {
+                        TimeUnit.SECONDS.sleep(secondsToSleep);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
+                    
+                    currPlayer = playerOne;  
+                    if (currPlayer.getPlayerType() == Game.ROBOT) {
+                        currPlayer.MoveNext(board);
+                        setVisible(true);
+            
+                        currPlayer = playerTwo;
+                    }                    
+
                 } else {
                     isPlayerOneMove = true;
                     state = Game.NOT_STARTED;
