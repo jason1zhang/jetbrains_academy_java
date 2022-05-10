@@ -77,6 +77,7 @@ class PlayerRobot extends Player {
 
         // draw the cell
         board.getBoard()[row * Game.SIZE + col].setText(this.isFirst ? Game.STR_CELL_X : Game.STR_CELL_O);
+        board.getBoard()[row * Game.SIZE + col].setVisible(true);
     }
 
     /**

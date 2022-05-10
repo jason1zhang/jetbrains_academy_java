@@ -10,6 +10,7 @@ public class CellButton extends JButton {
         super();
 
         this.cell = new Cell();
+        this.setBackground(Color.LIGHT_GRAY);
         this.isClicked = false;
     }
 
@@ -18,6 +19,7 @@ public class CellButton extends JButton {
 
         this.setName(name);
         this.setFont(new Font("Arial", Font.BOLD, 40));
+        this.setBackground(Color.LIGHT_GRAY);
 
         this.cell = new Cell();
         this.isClicked = false;
