@@ -1,5 +1,3 @@
-import java.util.*;
-
 class PlayerHuman extends Player {
     public PlayerHuman() {
         super();

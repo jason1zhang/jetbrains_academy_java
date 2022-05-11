@@ -4,15 +4,12 @@ import java.awt.event.*;
 import java.util.concurrent.TimeUnit;
 
 public class TicTacToe extends JFrame {
-
     /**
      * member variables
      */    
     private Player playerOne;
     private Player playerTwo;
     private Player currPlayer;  // current player
-
-    private boolean isPlayerOneMove;    // who is moving now
 
     private Board board;
 
@@ -22,18 +19,16 @@ public class TicTacToe extends JFrame {
     private JButton buttonPlayer2;
 
     private int state;
-
-    private int secondsToSleep;
+    private final int secondsToSleep;
 
     public TicTacToe() {
 
         this.playerOne = null;
         this.playerTwo = null;
 
-        this.isPlayerOneMove = true;
         this.state = Game.NOT_STARTED;
 
-        this.secondsToSleep = 1;
+        this.secondsToSleep = 1;    // delay between movements
 
         initComponents();
 
@@ -45,6 +40,9 @@ public class TicTacToe extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * design the game layout
+     */
     private void initComponents() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("Tic Tac Toe");
@@ -87,7 +85,6 @@ public class TicTacToe extends JFrame {
         this.board = new Board();
 
         // add the components to the frame
-        // setLayout(new BorderLayout(10, 10));
         setLayout(new BorderLayout(0, 0));
 
         add(panelButtons, BorderLayout.NORTH);
@@ -96,7 +93,7 @@ public class TicTacToe extends JFrame {
     }
 
     /**
-     * add a listener for each cell of the field
+     * add a listener for each cell on the field
      */
     public void actOnCellButton() {
         int size = this.board.getBoardSize();
@@ -111,10 +108,14 @@ public class TicTacToe extends JFrame {
             cell.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+
+                    cell.setEnabled(true);  // enable the button
+
                     if (state == Game.NOT_STARTED  || state == Game.GAME_OVER) {
                         return;
                     }
 
+                    // human make the move
                     if (currPlayer.getPlayerType() == Game.HUMAN) {                    
                         if (cell.getText() == Game.STR_CELL_EMPTY) {
                             if (currPlayer.getPlayerCellType() == Game.CELL_X) {
@@ -126,14 +127,16 @@ public class TicTacToe extends JFrame {
                             }
                         }
 
-                        try {
-                            TimeUnit.SECONDS.sleep(secondsToSleep);
-                        } catch (InterruptedException ie) {
-                            Thread.currentThread().interrupt();
-                        }
+                        pause();
 
                         currPlayer = currPlayer == playerOne ? playerTwo : playerOne;                        
+
+                        // human play against computer
                         if (currPlayer.getPlayerType() == Game.ROBOT) {
+
+                            checkGameState();
+                            pause();
+
                             currPlayer.MoveNext(board);     
                             currPlayer = currPlayer == playerOne ? playerTwo : playerOne;                                                                           
                         }
@@ -141,29 +144,15 @@ public class TicTacToe extends JFrame {
                         setVisible(true);
                     }
 
-                    state = checkState(); // check game state
-                    switch (state) {
-                        case Game.X_WIN:
-                            labelStatus.setText(Game.STR_X_WIN);
-                            state = Game.GAME_OVER;
-                            break;
-                        case Game.O_WIN:
-                            labelStatus.setText(Game.STR_O_WIN);
-                            state = Game.GAME_OVER;
-                            break;
-                        case Game.DRAW:
-                            labelStatus.setText(Game.STR_DRAW);
-                            state = Game.GAME_OVER;
-                            break;
-                        case Game.IN_PROGRESS:
-                            labelStatus.setText(Game.STR_IN_PROGRESS);                            
-                            break;
-                    }
+                    checkGameState();
                 }
             });
         }
     }
 
+    /**
+     * add delay between movements
+     */
     private void pause() {
         try {
             TimeUnit.SECONDS.sleep(secondsToSleep);
@@ -176,20 +165,25 @@ public class TicTacToe extends JFrame {
      * add the listener for reset button
      */
     public void actOnStartResetButton() {
+
         this.buttonStartReset.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
                 if (state == Game.NOT_STARTED) {
                     state = Game.IN_PROGRESS;
-                    // buttonStartReset.setEnabled(false);
+
+                    buttonPlayer1.setEnabled(false);
+                    buttonPlayer2.setEnabled(false);
                     
-                    // create player 1 and player 2
+                    // create player 1
                     if (buttonPlayer1.getText() == Game.STR_HUMAN) {
                         playerOne = new PlayerHuman();
                     } else {
                         playerOne = new PlayerRobot(Game.HARD);
                     }
 
+                    // create player 2
                     if (buttonPlayer2.getText() == Game.STR_HUMAN) {
                         playerTwo = new PlayerHuman(false);
                     } else {
@@ -200,14 +194,16 @@ public class TicTacToe extends JFrame {
                     labelStatus.setText(Game.STR_IN_PROGRESS);
                     setVisible(true);
 
+                    board.enableBoard();
+
                     pause();
                     
                     currPlayer = playerOne;
 
-                    // do while loop is for computer playing against computer
+                    // do while loop for computer playing against computer
                     do {
                         if (currPlayer.getPlayerType() == Game.ROBOT) {
-                            currPlayer.MoveNext(board); 
+                            currPlayer.MoveNext(board);                            
                         } else {
                             break;  // if player is human, break out the do while loop
                         }
@@ -218,36 +214,19 @@ public class TicTacToe extends JFrame {
 
                         currPlayer = currPlayer == playerOne ? playerTwo : playerOne;
 
-                        state = checkState(); // check game state
-                        switch (state) {
-                            case Game.X_WIN:
-                                state = Game.GAME_OVER;
-                                labelStatus.setText(Game.STR_X_WIN);
-                                break;
-                            case Game.O_WIN:
-                                state = Game.GAME_OVER;
-                                labelStatus.setText(Game.STR_O_WIN);                                
-                                break;
-                            case Game.DRAW:
-                                state = Game.GAME_OVER;
-                                labelStatus.setText(Game.STR_DRAW);
-                                break;
-                            case Game.IN_PROGRESS:
-                                labelStatus.setText(Game.STR_IN_PROGRESS);                            
-                                break;
-                        } 
+                        checkGameState();
                         
                         if (state == Game.GAME_OVER) {
                             break;  // break out the do while loop
                         }
+                        
                     } while (currPlayer.getPlayerType() == Game.ROBOT);
 
                 } else if (state == Game.IN_PROGRESS) {
-                    // buttonStartReset.setEnabled(false);
+                    // do nothing
                     pause();
 
                 } else if (state == Game.GAME_OVER) {
-                    isPlayerOneMove = true;
                     state = Game.NOT_STARTED;
 
                     playerOne = null;
@@ -255,9 +234,11 @@ public class TicTacToe extends JFrame {
 
                     board.clear();
 
-                    // buttonStartReset.setEnabled(true);
                     buttonStartReset.setText(Game.STR_START);
                     labelStatus.setText(Game.STR_NOT_STARTED);
+
+                    buttonPlayer1.setEnabled(true);
+                    buttonPlayer2.setEnabled(true);                    
                 }
             }
         });
@@ -302,92 +283,49 @@ public class TicTacToe extends JFrame {
     /**
      * check the game state
      *
-     * @return game state
      */
-    private int checkState() {
+    private void checkGameState() {
         if (this.board.checkWin(Game.CELL_X)) {
-            return Game.X_WIN;
-        }
+            this.state = Game.X_WIN;
 
-        if (this.board.checkWin(Game.CELL_O)) {
-            return Game.O_WIN;
-        }
+        } else if (this.board.checkWin(Game.CELL_O)) {
+            this.state = Game.O_WIN;
 
-        boolean isBoardFull = true;
+        } else {
+            // check if board is full or not
+            boolean isBoardFull = true;
+            for (int row = 0; row < this.board.size; row++) {
+                for (int col = 0; col < this.board.size; col++) {
+                    if (this.board.getBoard()[row * this.board.size + col].getCell().getCellType() == Game.CELL_EMPTY) {
+                        isBoardFull = false;
+                        break; // break out of the inner for loop
+                    }
 
-        for (int row = 0; row < this.board.size; row++) {
-            for (int col = 0; col < this.board.size; col++) {
-                if (this.board.getBoard()[row * this.board.size + col].getCell().getCellType() == Game.CELL_EMPTY) {
-                    isBoardFull = false;
-                    break; // break out of the inner for loop
-                }
-
-                if (!isBoardFull) { // break out of the outer for loop
-                    break;
+                    if (!isBoardFull) { // break out of the outer for loop
+                        break;
+                    }
                 }
             }
+
+            this.state = isBoardFull? Game.DRAW : Game.IN_PROGRESS;
+        }        
+        
+        switch (this.state) {
+            case Game.X_WIN:
+                this.labelStatus.setText(Game.STR_X_WIN);
+                this.state = Game.GAME_OVER;
+                break;
+            case Game.O_WIN:
+                this.labelStatus.setText(Game.STR_O_WIN);
+                this.state = Game.GAME_OVER;
+                break;
+            case Game.DRAW:
+                this.labelStatus.setText(Game.STR_DRAW);
+                this.state = Game.GAME_OVER;
+                break;
+            case Game.IN_PROGRESS:
+                labelStatus.setText(Game.STR_IN_PROGRESS);                            
+                break;
         }
-
-        return isBoardFull? Game.DRAW : Game.IN_PROGRESS;
-    }
-
-    /**
-     * add a listener for each cell of the field
-     * 
-     * Note: this is the version for stage 2 of 4
-     */
-    public void actOnCellButton1() {
-        int size = this.board.getBoardSize();
-        CellButton[] cells = this.board.getBoard();
-
-        for (int i = 0; i < size * size; i++) {
-            CellButton cell = cells[i];
-
-            cell.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (state == Game.NOT_STARTED  || state == Game.GAME_OVER) {
-                        return;
-                    }
-
-                    if (cell.getIsClicked() == false) {
-                        if (isPlayerOneMove) {
-                            cell.setText(Game.STR_CELL_X);
-                            cell.getCell().setCellType(Game.CELL_X);
-
-                            isPlayerOneMove = false;
-                        } else {
-                            cell.setText(Game.STR_CELL_O);
-                            cell.getCell().setCellType(Game.CELL_O);
-
-                            isPlayerOneMove = true;
-                        }
-                    } else {
-                        cell.setIsclicked(true);
-                    }
-
-                    state = checkState(); // check game state
-                    switch (state) {
-                        case Game.X_WIN:
-                            labelStatus.setText(Game.STR_X_WIN);
-                            state = Game.GAME_OVER;
-                            break;
-                        case Game.O_WIN:
-                            labelStatus.setText(Game.STR_O_WIN);
-                            state = Game.GAME_OVER;
-                            break;
-                        case Game.DRAW:
-                            labelStatus.setText(Game.STR_DRAW);
-                            state = Game.GAME_OVER;
-                            break;
-                        case Game.IN_PROGRESS:
-                            labelStatus.setText(Game.STR_IN_PROGRESS);
-                            isPlayerOneMove = !isPlayerOneMove; // continue playing the game by switching the side
-                            break;
-                    }
-                }
-            });
-        }
-    }
-
+    }    
 }

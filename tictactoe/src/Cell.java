@@ -1,5 +1,4 @@
-
-public class Cell implements Cloneable{
+class Cell implements Cloneable{
     private int row;
     private int col;
     private int cellType;   // 0: CELL_EMPTY; 1: CELL_X; 2: CELL_O

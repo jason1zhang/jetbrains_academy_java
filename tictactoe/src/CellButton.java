@@ -1,7 +1,7 @@
 import javax.swing.JButton;
 import java.awt.*;
 
-public class CellButton extends JButton {
+class CellButton extends JButton {
 
     private Cell cell;          // each CellButton contains one Cell object
     private boolean isClicked;
@@ -9,9 +9,12 @@ public class CellButton extends JButton {
     public CellButton() {
         super();
 
-        this.cell = new Cell();
+        this.cell = new Cell();        
         this.setBackground(Color.LIGHT_GRAY);
+
         this.isClicked = false;
+
+        this.setEnabled(false);        
     }
 
     public CellButton(String text, String name) {
@@ -23,6 +26,8 @@ public class CellButton extends JButton {
 
         this.cell = new Cell();
         this.isClicked = false;
+
+        this.setEnabled(false);
     }
 
     public Cell getCell() {

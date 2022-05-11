@@ -1,5 +1,4 @@
-
-public class Move implements Cloneable{
+class Move implements Cloneable{
     private int score;
     private Cell cell;
 

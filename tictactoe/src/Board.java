@@ -2,7 +2,7 @@ import javax.swing.JPanel;
 import java.awt.*;
 import java.util.*;
 
-public class Board extends JPanel{
+class Board extends JPanel{
     protected int size;
     protected CellButton[] board;
 
@@ -33,6 +33,8 @@ public class Board extends JPanel{
             this.board[i].getCell().setCellType(Game.CELL_EMPTY);   // initialize to empty cell
 
             this.board[i].setFocusPainted(false);   // remove the border around the text of the active cell
+
+            this.setEnabled(false); // disable the button
 
             add(this.board[i]);
 
@@ -77,7 +79,15 @@ public class Board extends JPanel{
         for (CellButton cellButton : this.board) {
             cellButton.getCell().setCellType(Game.CELL_EMPTY);
             cellButton.setText(Game.STR_CELL_EMPTY);
+            
+            cellButton.setEnabled(false);
         }
+    }
+
+    public void enableBoard() {
+        for (CellButton cellButton : this.board) {
+            cellButton.setEnabled(true);
+        }        
     }
 
     /**
@@ -98,25 +108,4 @@ public class Board extends JPanel{
                 (this.board[0].getCell().getCellType() == playerCellType && this.board[4].getCell().getCellType() == playerCellType && this.board[8].getCell().getCellType() == playerCellType) ||
                 (this.board[2].getCell().getCellType() == playerCellType && this.board[4].getCell().getCellType() == playerCellType && this.board[6].getCell().getCellType() == playerCellType);
     }
-
-    /**
-     * check if player wins the game
-     *
-     * @param player player to check if wins
-     * @return true if this player wins otherwise false
-     */
-    /*
-    public boolean checkWin(Player player) {
-        int playerCellType = player.getPlayerCellType();
-
-        return (this.board[0].getCell().getCellType() == playerCellType && this.board[1].getCell().getCellType() == playerCellType && this.board[2].getCell().getCellType() == playerCellType) ||
-                (this.board[3].getCell().getCellType() == playerCellType && this.board[4].getCell().getCellType() == playerCellType && this.board[5].getCell().getCellType() == playerCellType) ||
-                (this.board[6].getCell().getCellType() == playerCellType && this.board[7].getCell().getCellType() == playerCellType && this.board[8].getCell().getCellType() == playerCellType) ||
-                (this.board[0].getCell().getCellType() == playerCellType && this.board[3].getCell().getCellType() == playerCellType && this.board[6].getCell().getCellType() == playerCellType) ||
-                (this.board[1].getCell().getCellType() == playerCellType && this.board[4].getCell().getCellType() == playerCellType && this.board[7].getCell().getCellType() == playerCellType) ||
-                (this.board[2].getCell().getCellType() == playerCellType && this.board[5].getCell().getCellType() == playerCellType && this.board[8].getCell().getCellType() == playerCellType) ||
-                (this.board[0].getCell().getCellType() == playerCellType && this.board[4].getCell().getCellType() == playerCellType && this.board[8].getCell().getCellType() == playerCellType) ||
-                (this.board[2].getCell().getCellType() == playerCellType && this.board[4].getCell().getCellType() == playerCellType && this.board[6].getCell().getCellType() == playerCellType);
-    }
-    */
 }

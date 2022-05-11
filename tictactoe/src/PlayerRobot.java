@@ -62,7 +62,6 @@ class PlayerRobot extends Player {
     /**
      * robot makes the move at the hard level
      *
-     * @param scanner java.util.Scanner
      * @param board   game board
      */
     private void MoveNextHard(Board board) {
@@ -73,11 +72,15 @@ class PlayerRobot extends Player {
         int col = bestMove.getCell().getCol();
 
         Cell cell = this.isFirst ? new Cell(row, col, Game.CELL_X) : new Cell(row, col, Game.CELL_O);
-        board.getBoard()[row * Game.SIZE + col].setCell(cell);  // make the robot move
+
+        CellButton cellButton = board.getBoard()[row * Game.SIZE + col];
+        cellButton.setCell(cell);  // make the robot move
+
+        cellButton.setEnabled(true);
 
         // draw the cell
-        board.getBoard()[row * Game.SIZE + col].setText(this.isFirst ? Game.STR_CELL_X : Game.STR_CELL_O);
-        board.getBoard()[row * Game.SIZE + col].setVisible(true);
+        cellButton.setText(this.isFirst ? Game.STR_CELL_X : Game.STR_CELL_O);
+        cellButton.setVisible(true);
     }
 
     /**
@@ -158,7 +161,7 @@ class PlayerRobot extends Player {
 
                 board.getBoard()[curIndex].getCell().setCellType(Game.CELL_EMPTY);
 
-                maxEval = maxEval >= eval ? maxEval : eval;             
+                maxEval = Math.max(maxEval, eval);            
             }
 
             return maxEval;
@@ -177,7 +180,7 @@ class PlayerRobot extends Player {
 
                 board.getBoard()[curIndex].getCell().setCellType(Game.CELL_EMPTY);
 
-                minEval = minEval <= eval ? minEval : eval;    
+                minEval = Math.min(minEval, eval);   
             }
 
             return minEval;            
