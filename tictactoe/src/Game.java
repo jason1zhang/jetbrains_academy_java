@@ -35,7 +35,7 @@ class Game {
 
     // String for human and computer
     final static String STR_HUMAN = "Human";
-    final static String STR_COMPUTER = "Computer";
+    final static String STR_COMPUTER = "Robot";
 
     // robot level
     final static int EASY = 0;

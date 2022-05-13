@@ -191,7 +191,11 @@ public class TicTacToe extends JFrame {
                     }
 
                     buttonStartReset.setText(Game.STR_RESET);
+                    buttonStartReset.setVisible(true);
+                    
                     labelStatus.setText(Game.STR_IN_PROGRESS);
+                    labelStatus.setVisible(true);
+                    
                     setVisible(true);
 
                     board.enableBoard();
@@ -222,11 +226,13 @@ public class TicTacToe extends JFrame {
                         
                     } while (currPlayer.getPlayerType() == Game.ROBOT);
 
-                } else if (state == Game.IN_PROGRESS) {
+                } 
+                // else if (state == Game.IN_PROGRESS) {
                     // do nothing
-                    pause();
+                    // pause();
 
-                } else if (state == Game.GAME_OVER) {
+                // } 
+                else if (state == Game.IN_PROGRESS || state == Game.GAME_OVER) {
                     state = Game.NOT_STARTED;
 
                     playerOne = null;
