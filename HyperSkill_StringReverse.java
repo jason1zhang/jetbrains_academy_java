@@ -47,5 +47,4 @@ class HyperSkill_StringReverse {
 
         public String reverse(String str);
     }
-
 }
