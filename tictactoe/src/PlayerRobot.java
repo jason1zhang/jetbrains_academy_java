@@ -81,6 +81,7 @@ class PlayerRobot extends Player {
         // draw the cell
         cellButton.setText(this.isFirst ? Game.STR_CELL_X : Game.STR_CELL_O);
         cellButton.setVisible(true);
+        cellButton.doClick();
     }
 
     /**

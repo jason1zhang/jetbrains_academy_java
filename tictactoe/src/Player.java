@@ -29,6 +29,16 @@ abstract class Player implements Cloneable{
         this.moves = new LinkedList<Move>();
     }
 
+    public Player(boolean isFirst, int playerType) {
+        this.isFirst = isFirst;
+
+        this.playerCellType = isFirst ? Game.CELL_X : Game.CELL_O;
+        this.playerType = playerType;
+
+        this.curMove = new Move();
+        this.moves = new LinkedList<Move>();
+    }    
+
     public boolean isFirst() {
         return this.isFirst;
     }
@@ -41,12 +51,20 @@ abstract class Player implements Cloneable{
         return this.playerCellType;
     }
 
+    public String getPlayerCellTypeStr() {
+        return this.playerCellType == Game.CELL_X ? Game.STR_CELL_X : Game.STR_CELL_O; 
+    }
+
     public void setPlayerCellType(int playerCellType) {
         this.playerCellType = playerCellType;
     }
 
     public int getPlayerType() {
         return this.playerType;
+    }
+
+    public String getPlayerTypeStr() {
+        return this.playerType == Game.ROBOT ? Game.STR_COMPUTER : Game.STR_HUMAN;
     }
 
     public void setPlayerType(int playerType) {

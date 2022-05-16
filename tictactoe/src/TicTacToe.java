@@ -21,6 +21,8 @@ public class TicTacToe extends JFrame {
     private int state;
     private final int secondsToSleep;
 
+    private int step;
+
     public TicTacToe() {
 
         this.playerOne = null;
@@ -29,6 +31,7 @@ public class TicTacToe extends JFrame {
         this.state = Game.NOT_STARTED;
 
         this.secondsToSleep = 1;    // delay between movements
+        this.step = 0;
 
         initComponents();
 
@@ -48,7 +51,7 @@ public class TicTacToe extends JFrame {
         setTitle("Tic Tac Toe");
         setResizable(false);
         setSize(450, 450);
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(null);        
 
         setLayout(new BorderLayout());
 
@@ -90,6 +93,165 @@ public class TicTacToe extends JFrame {
         add(panelButtons, BorderLayout.NORTH);
         add(this.board, BorderLayout.CENTER);
         add(panelStatus, BorderLayout.SOUTH);
+
+        // add game menu
+        initMenu();
+    }
+
+    public void initMenu() {
+        // add game menu bar
+        JMenuBar menuBar = new JMenuBar();
+        
+        JMenu menuGame = new JMenu("Game");
+        menuGame.setMnemonic(KeyEvent.VK_G);
+        menuGame.setName("MenuGame");
+        
+        // add menu items into the game menu
+        // human vs human menu item
+        JMenuItem menuitemHumanHuman = new JMenuItem("Human vs Human");
+        menuitemHumanHuman.setMnemonic(KeyEvent.VK_H);
+        menuitemHumanHuman.setName("MenuHumanHuman");
+
+        menuitemHumanHuman.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                startGameFromMenu(Game.HUMAN, Game.HUMAN);
+            }
+        });
+
+        // human vs robot menu item
+        JMenuItem menuitemHumanRobot = new JMenuItem("Human vs Robot");
+        menuitemHumanRobot.setMnemonic(KeyEvent.VK_R);
+        menuitemHumanRobot.setName("MenuHumanRobot");
+
+        menuitemHumanRobot.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                startGameFromMenu(Game.HUMAN, Game.ROBOT);
+            }
+        });
+
+        // robot vs human menu item
+        JMenuItem menuitemRobotHuman = new JMenuItem("Robot vs Human");
+        menuitemRobotHuman.setMnemonic(KeyEvent.VK_U);
+        menuitemRobotHuman.setName("MenuRobotHuman");
+
+        menuitemRobotHuman.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                startGameFromMenu(Game.ROBOT, Game.HUMAN);
+                
+                currPlayer.MoveNext(board);   
+
+                step++;
+                // System.out.println("In the method initMenu -> MenuRobotHuman -> actionPerformed");  // testing
+                checkGameState();
+
+                currPlayer = currPlayer == playerOne ? playerTwo : playerOne;
+            }
+        });
+
+        // robot vs robot menu item
+        JMenuItem menuitemRobotRobot = new JMenuItem("Robot vs Robot");
+        menuitemRobotRobot.setMnemonic(KeyEvent.VK_O);
+        menuitemRobotRobot.setName("MenuRobotRobot");
+
+        menuitemRobotRobot.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                startGameFromMenu(Game.ROBOT, Game.ROBOT);
+
+                try {
+                    startRobotToRobot();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            public void startRobotToRobot() throws Exception {
+                Runnable robotPlay = new Runnable() {
+                    public void run() {
+
+                        board.enableBoard();
+
+                        // do while loop for computer playing against computer
+                        while (true) {
+                            currPlayer.MoveNext(board);
+                            
+                            board.setVisible(true);
+
+                            checkGameState();
+                            // System.out.printf("count: %d\n\n", ++step);  // testing
+
+                            pause();
+
+                            if (state == Game.GAME_OVER) {
+                                break; // break out the do while loop
+                            }
+
+                            currPlayer = currPlayer == playerOne ? playerTwo : playerOne;
+                        }
+                    }
+                };
+
+                SwingUtilities.invokeLater(robotPlay);
+            }
+        });
+
+        // exit menu item
+        JMenuItem menuitemExit = new JMenuItem("Exit");
+        menuitemExit.setMnemonic(KeyEvent.VK_X);
+        menuitemExit.setName("MenuExit");
+
+        menuitemExit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                System.exit(0);
+            }
+        });
+
+        menuGame.add(menuitemHumanHuman);
+        menuGame.add(menuitemHumanRobot);
+        menuGame.add(menuitemRobotHuman);
+        menuGame.add(menuitemRobotRobot);
+
+        menuGame.addSeparator();
+        menuGame.add(menuitemExit);
+
+        menuBar.add(menuGame);
+        setJMenuBar(menuBar);
+        setVisible(true);
+    }
+
+    private void startGameFromMenu(int playerOneType, int playerTwoType) {
+        // create player 1
+        if (playerOneType == Game.HUMAN) {
+            this.playerOne = new PlayerHuman();
+        } else {
+            this.playerOne = new PlayerRobot(Game.HARD);
+        }
+
+        // create player 2
+        if (playerTwoType == Game.HUMAN) {
+            playerTwo = new PlayerHuman(false);
+        } else {
+            playerTwo = new PlayerRobot(false, Game.HARD);
+        }
+
+        this.buttonPlayer1.setText(playerOneType == Game.HUMAN ? Game.STR_HUMAN : Game.STR_COMPUTER);
+        this.buttonPlayer1.setEnabled(false);
+
+        this.buttonPlayer2.setText(playerTwoType == Game.HUMAN ? Game.STR_HUMAN : Game.STR_COMPUTER);
+        this.buttonPlayer2.setEnabled(false);
+
+        this.buttonStartReset.setText(Game.STR_RESET);
+
+        this.state = Game.IN_PROGRESS;
+        board.clear();
+        board.enableBoard();
+        
+        this.currPlayer = playerOne;
+        this.labelStatus.setText(String.format("The turn of %s Player (%s)", currPlayer.getPlayerTypeStr(), currPlayer.getPlayerCellTypeStr()));
     }
 
     /**
@@ -108,9 +270,6 @@ public class TicTacToe extends JFrame {
             cell.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-
-                    cell.setEnabled(true);  // enable the button
-
                     if (state == Game.NOT_STARTED  || state == Game.GAME_OVER) {
                         return;
                     }
@@ -128,23 +287,35 @@ public class TicTacToe extends JFrame {
                         }
 
                         pause();
+                        step++;   
 
-                        currPlayer = currPlayer == playerOne ? playerTwo : playerOne;                        
+                        // System.out.println("In the method actOnCellButon -> actionPerformed -> HumanPlayer");   // testing
+                        checkGameState();          
+                        if (state == Game.NOT_STARTED  || state == Game.GAME_OVER) {
+                            return;
+                        }                                      
+
+                        currPlayer = currPlayer == playerOne ? playerTwo : playerOne;           
+
+                        labelStatus.setText(String.format("The turn of %s Player (%s)", currPlayer.getPlayerTypeStr(), currPlayer.getPlayerCellTypeStr()));
 
                         // human play against computer
                         if (currPlayer.getPlayerType() == Game.ROBOT) {
-
-                            checkGameState();
                             pause();
+                            step++;
 
                             currPlayer.MoveNext(board);     
-                            currPlayer = currPlayer == playerOne ? playerTwo : playerOne;                                                                           
+        
+                            // System.out.println("In the method actOnCellButon -> actionPerformed -> RobotPlayer");   // testing
+                            checkGameState();
+
+                            currPlayer = currPlayer == playerOne ? playerTwo : playerOne;
                         }
 
                         setVisible(true);
                     }
 
-                    checkGameState();
+                    // checkGameState();
                 }
             });
         }
@@ -191,18 +362,20 @@ public class TicTacToe extends JFrame {
                     }
 
                     buttonStartReset.setText(Game.STR_RESET);
-                    buttonStartReset.setVisible(true);
-                    
-                    labelStatus.setText(Game.STR_IN_PROGRESS);
-                    labelStatus.setVisible(true);
+                    buttonStartReset.setVisible(true);     
+
+                    currPlayer = playerOne;
+
+                    // labelStatus.setText(Game.STR_IN_PROGRESS);
+                    labelStatus.setText(String.format("The turn of %s Player (%s)", currPlayer.getPlayerTypeStr(), currPlayer.getPlayerCellTypeStr()));
+
+                    labelStatus.setVisible(true);                                     
                     
                     setVisible(true);
 
                     board.enableBoard();
 
-                    pause();
-                    
-                    currPlayer = playerOne;
+                    pause();                    
 
                     // do while loop for computer playing against computer
                     do {
@@ -216,9 +389,11 @@ public class TicTacToe extends JFrame {
                         setVisible(true);
                         pause();  
 
-                        currPlayer = currPlayer == playerOne ? playerTwo : playerOne;
+                        // currPlayer = currPlayer == playerOne ? playerTwo : playerOne;
 
                         checkGameState();
+
+                        currPlayer = currPlayer == playerOne ? playerTwo : playerOne;
                         
                         if (state == Game.GAME_OVER) {
                             break;  // break out the do while loop
@@ -237,14 +412,14 @@ public class TicTacToe extends JFrame {
 
                     playerOne = null;
                     playerTwo = null;
-
+            
                     board.clear();
-
+            
                     buttonStartReset.setText(Game.STR_START);
                     labelStatus.setText(Game.STR_NOT_STARTED);
-
+            
                     buttonPlayer1.setEnabled(true);
-                    buttonPlayer2.setEnabled(true);                    
+                    buttonPlayer2.setEnabled(true);   
                 }
             }
         });
@@ -318,11 +493,9 @@ public class TicTacToe extends JFrame {
         
         switch (this.state) {
             case Game.X_WIN:
-                this.labelStatus.setText(Game.STR_X_WIN);
-                this.state = Game.GAME_OVER;
-                break;
             case Game.O_WIN:
-                this.labelStatus.setText(Game.STR_O_WIN);
+                this.labelStatus.setText(String.format("%s Player (%s) wins",
+                                        this.currPlayer.getPlayerTypeStr(), this.currPlayer.getPlayerCellTypeStr()));
                 this.state = Game.GAME_OVER;
                 break;
             case Game.DRAW:
@@ -330,8 +503,18 @@ public class TicTacToe extends JFrame {
                 this.state = Game.GAME_OVER;
                 break;
             case Game.IN_PROGRESS:
-                labelStatus.setText(Game.STR_IN_PROGRESS);                            
+                this.labelStatus.setText(String.format("The turn of %s Player (%s)", 
+                                        this.currPlayer.getPlayerTypeStr(), this.currPlayer.getPlayerCellTypeStr()));
+                
+                // testing    
+                // System.out.printf("In the method checkGameState -> ");               
+                // System.out.printf(String.format("step: %d => The turn of %s Player (%s)\n\n", 
+                                    // step, this.currPlayer.getPlayerTypeStr(), this.currPlayer.getPlayerCellTypeStr()));                                        
                 break;
         }
+
+        // labelStatus.setEnabled(true);
+        // labelStatus.setVisible(true);
+        // setVisible(true);
     }    
 }
