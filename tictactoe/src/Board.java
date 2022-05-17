@@ -28,13 +28,11 @@ class Board extends JPanel{
 
         for (int i = 0; i < this.board.length; i++) {
             text = "" + chAlpha + chNum;
-            // this.board[i] = new Cell(text, "Button" + text);
+
             this.board[i] = new CellButton(Game.STR_CELL_EMPTY, "Button" + text);
             this.board[i].getCell().setCellType(Game.CELL_EMPTY);   // initialize to empty cell
 
             this.board[i].setFocusPainted(false);   // remove the border around the text of the active cell
-
-            this.setEnabled(false); // disable the button
 
             add(this.board[i]);
 
@@ -78,8 +76,9 @@ class Board extends JPanel{
     public void clear() {
         for (CellButton cellButton : this.board) {
             cellButton.getCell().setCellType(Game.CELL_EMPTY);
-            cellButton.setText(Game.STR_CELL_EMPTY);
+            cellButton.setIsclicked(false);
             
+            cellButton.setText(Game.STR_CELL_EMPTY);            
             cellButton.setEnabled(false);
         }
     }

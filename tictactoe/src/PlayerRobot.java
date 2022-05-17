@@ -81,7 +81,10 @@ class PlayerRobot extends Player {
         // draw the cell
         cellButton.setText(this.isFirst ? Game.STR_CELL_X : Game.STR_CELL_O);
         cellButton.setVisible(true);
-        cellButton.doClick();
+        
+        // Programmatically perform a "click". 
+        // This does the same thing as if the user had pressed and released the button.
+        cellButton.doClick();  
     }
 
     /**

@@ -21,20 +21,15 @@ public class TicTacToe extends JFrame {
     private int state;
     private final int secondsToSleep;
 
-    private int step;
-
     public TicTacToe() {
-
         this.playerOne = null;
         this.playerTwo = null;
-
         this.state = Game.NOT_STARTED;
-
         this.secondsToSleep = 1;    // delay between movements
-        this.step = 0;
 
         initComponents();
 
+        // setup action listeners on the GUI components
         actOnCellButton();
         actOnPlayerOneButton();
         actOnPlayerTwoButton();
@@ -44,7 +39,7 @@ public class TicTacToe extends JFrame {
     }
 
     /**
-     * design the game layout
+     * setup the game layout
      */
     private void initComponents() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -55,7 +50,7 @@ public class TicTacToe extends JFrame {
 
         setLayout(new BorderLayout());
 
-        // construct a panel to hold  2 player button and start/reset button
+        // construct a panel to hold two player button and one start/reset button
         JPanel panelButtons = new JPanel();
         this.buttonPlayer1 = new JButton(Game.STR_HUMAN);
         this.buttonPlayer1.setName("ButtonPlayer1");
@@ -108,11 +103,11 @@ public class TicTacToe extends JFrame {
         
         // add menu items into the game menu
         // human vs human menu item
-        JMenuItem menuitemHumanHuman = new JMenuItem("Human vs Human");
-        menuitemHumanHuman.setMnemonic(KeyEvent.VK_H);
-        menuitemHumanHuman.setName("MenuHumanHuman");
+        JMenuItem menuItemHumanHuman = new JMenuItem("Human vs Human");
+        menuItemHumanHuman.setMnemonic(KeyEvent.VK_H);
+        menuItemHumanHuman.setName("MenuHumanHuman");
 
-        menuitemHumanHuman.addActionListener(new ActionListener() {
+        menuItemHumanHuman.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
                 startGameFromMenu(Game.HUMAN, Game.HUMAN);
@@ -120,11 +115,11 @@ public class TicTacToe extends JFrame {
         });
 
         // human vs robot menu item
-        JMenuItem menuitemHumanRobot = new JMenuItem("Human vs Robot");
-        menuitemHumanRobot.setMnemonic(KeyEvent.VK_R);
-        menuitemHumanRobot.setName("MenuHumanRobot");
+        JMenuItem menuItemHumanRobot = new JMenuItem("Human vs Robot");
+        menuItemHumanRobot.setMnemonic(KeyEvent.VK_R);
+        menuItemHumanRobot.setName("MenuHumanRobot");
 
-        menuitemHumanRobot.addActionListener(new ActionListener() {
+        menuItemHumanRobot.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
                 startGameFromMenu(Game.HUMAN, Game.ROBOT);
@@ -132,31 +127,28 @@ public class TicTacToe extends JFrame {
         });
 
         // robot vs human menu item
-        JMenuItem menuitemRobotHuman = new JMenuItem("Robot vs Human");
-        menuitemRobotHuman.setMnemonic(KeyEvent.VK_U);
-        menuitemRobotHuman.setName("MenuRobotHuman");
+        JMenuItem menuItemRobotHuman = new JMenuItem("Robot vs Human");
+        menuItemRobotHuman.setMnemonic(KeyEvent.VK_U);
+        menuItemRobotHuman.setName("MenuRobotHuman");
 
-        menuitemRobotHuman.addActionListener(new ActionListener() {
+        menuItemRobotHuman.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
                 startGameFromMenu(Game.ROBOT, Game.HUMAN);
                 
                 currPlayer.MoveNext(board);   
 
-                step++;
-                // System.out.println("In the method initMenu -> MenuRobotHuman -> actionPerformed");  // testing
                 checkGameState();
-
                 currPlayer = currPlayer == playerOne ? playerTwo : playerOne;
             }
         });
 
         // robot vs robot menu item
-        JMenuItem menuitemRobotRobot = new JMenuItem("Robot vs Robot");
-        menuitemRobotRobot.setMnemonic(KeyEvent.VK_O);
-        menuitemRobotRobot.setName("MenuRobotRobot");
+        JMenuItem menuItemRobotRobot = new JMenuItem("Robot vs Robot");
+        menuItemRobotRobot.setMnemonic(KeyEvent.VK_O);
+        menuItemRobotRobot.setName("MenuRobotRobot");
 
-        menuitemRobotRobot.addActionListener(new ActionListener() {
+        menuItemRobotRobot.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
                 startGameFromMenu(Game.ROBOT, Game.ROBOT);
@@ -176,13 +168,10 @@ public class TicTacToe extends JFrame {
 
                         // do while loop for computer playing against computer
                         while (true) {
-                            currPlayer.MoveNext(board);
-                            
+                            currPlayer.MoveNext(board);                            
                             board.setVisible(true);
 
                             checkGameState();
-                            // System.out.printf("count: %d\n\n", ++step);  // testing
-
                             pause();
 
                             if (state == Game.GAME_OVER) {
@@ -199,29 +188,35 @@ public class TicTacToe extends JFrame {
         });
 
         // exit menu item
-        JMenuItem menuitemExit = new JMenuItem("Exit");
-        menuitemExit.setMnemonic(KeyEvent.VK_X);
-        menuitemExit.setName("MenuExit");
+        JMenuItem menuItemExit = new JMenuItem("Exit");
+        menuItemExit.setMnemonic(KeyEvent.VK_X);
+        menuItemExit.setName("MenuExit");
 
-        menuitemExit.addActionListener(new ActionListener() {
+        menuItemExit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
                 System.exit(0);
             }
         });
 
-        menuGame.add(menuitemHumanHuman);
-        menuGame.add(menuitemHumanRobot);
-        menuGame.add(menuitemRobotHuman);
-        menuGame.add(menuitemRobotRobot);
+        menuGame.add(menuItemHumanHuman);
+        menuGame.add(menuItemHumanRobot);
+        menuGame.add(menuItemRobotHuman);
+        menuGame.add(menuItemRobotRobot);
 
         menuGame.addSeparator();
-        menuGame.add(menuitemExit);
+        menuGame.add(menuItemExit);
 
         menuBar.add(menuGame);
         setJMenuBar(menuBar);
         setVisible(true);
     }
+
+    /**
+     * helper function for starting the game from menu
+     * @param playerOneType player one type, human or robot
+     * @param playerTwoType player two type, human or robot
+     */
 
     private void startGameFromMenu(int playerOneType, int playerTwoType) {
         // create player 1
@@ -270,12 +265,15 @@ public class TicTacToe extends JFrame {
             cell.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (state == Game.NOT_STARTED  || state == Game.GAME_OVER) {
+                    if (state == Game.NOT_STARTED  || state == Game.GAME_OVER || cell.getIsClicked()) {
                         return;
                     }
 
                     // human make the move
-                    if (currPlayer.getPlayerType() == Game.HUMAN) {                    
+                    if (currPlayer.getPlayerType() == Game.HUMAN) {    
+                        
+                        cell.setIsclicked(true);
+                        
                         if (cell.getText() == Game.STR_CELL_EMPTY) {
                             if (currPlayer.getPlayerCellType() == Game.CELL_X) {
                                 cell.setText(Game.STR_CELL_X);
@@ -287,9 +285,7 @@ public class TicTacToe extends JFrame {
                         }
 
                         pause();
-                        step++;   
 
-                        // System.out.println("In the method actOnCellButon -> actionPerformed -> HumanPlayer");   // testing
                         checkGameState();          
                         if (state == Game.NOT_STARTED  || state == Game.GAME_OVER) {
                             return;
@@ -302,11 +298,9 @@ public class TicTacToe extends JFrame {
                         // human play against computer
                         if (currPlayer.getPlayerType() == Game.ROBOT) {
                             pause();
-                            step++;
 
                             currPlayer.MoveNext(board);     
         
-                            // System.out.println("In the method actOnCellButon -> actionPerformed -> RobotPlayer");   // testing
                             checkGameState();
 
                             currPlayer = currPlayer == playerOne ? playerTwo : playerOne;
@@ -314,8 +308,6 @@ public class TicTacToe extends JFrame {
 
                         setVisible(true);
                     }
-
-                    // checkGameState();
                 }
             });
         }
@@ -366,7 +358,6 @@ public class TicTacToe extends JFrame {
 
                     currPlayer = playerOne;
 
-                    // labelStatus.setText(Game.STR_IN_PROGRESS);
                     labelStatus.setText(String.format("The turn of %s Player (%s)", currPlayer.getPlayerTypeStr(), currPlayer.getPlayerCellTypeStr()));
 
                     labelStatus.setVisible(true);                                     
@@ -388,8 +379,6 @@ public class TicTacToe extends JFrame {
                         board.setVisible(true);
                         setVisible(true);
                         pause();  
-
-                        // currPlayer = currPlayer == playerOne ? playerTwo : playerOne;
 
                         checkGameState();
 
@@ -505,16 +494,7 @@ public class TicTacToe extends JFrame {
             case Game.IN_PROGRESS:
                 this.labelStatus.setText(String.format("The turn of %s Player (%s)", 
                                         this.currPlayer.getPlayerTypeStr(), this.currPlayer.getPlayerCellTypeStr()));
-                
-                // testing    
-                // System.out.printf("In the method checkGameState -> ");               
-                // System.out.printf(String.format("step: %d => The turn of %s Player (%s)\n\n", 
-                                    // step, this.currPlayer.getPlayerTypeStr(), this.currPlayer.getPlayerCellTypeStr()));                                        
                 break;
         }
-
-        // labelStatus.setEnabled(true);
-        // labelStatus.setVisible(true);
-        // setVisible(true);
     }    
 }
