@@ -55,18 +55,11 @@ public class GameOfLife2 {
                 adjCells = calcAdjCells(i, j, board);
                 Cell cell = board[i][j];
 
-                if (cell.getState() == CellState.ALIVE) {
-                    if (adjCells == 2 || adjCells == 3) {
-                        nextBoard[i][j] = new Cell(CellState.ALIVE, i, j);
-                    } else {
-                        nextBoard[i][j] = new Cell(CellState.DEAD, i, j);
-                    }
+                if ((cell.getState() == CellState.ALIVE && (adjCells == 2 || adjCells == 3))
+                        || (cell.getState() == CellState.DEAD && adjCells == 3)) {
+                    nextBoard[i][j] = new Cell(CellState.ALIVE, i, j);
                 } else {
-                    if (adjCells == 3) {
-                        nextBoard[i][j] = new Cell(CellState.ALIVE, i, j);
-                    } else {
-                        nextBoard[i][j] = new Cell(CellState.DEAD, i, j);
-                    }
+                    nextBoard[i][j] = new Cell(CellState.DEAD, i, j);
                 }
             }
         }
