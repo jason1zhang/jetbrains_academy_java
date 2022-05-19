@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.*;
 
 public class GameOfLife {
@@ -5,16 +6,55 @@ public class GameOfLife {
         Scanner scanner = new Scanner(System.in);
 
         int size = scanner.nextInt();
-        int seed = scanner.nextInt();
-        int generations = scanner.nextInt();
+        // int seed = scanner.nextInt();
+        // int generations = scanner.nextInt();
 
-        Universe currUniverse = new Universe(size, seed);
+        // Universe currUniverse = new Universe(size, seed);
+        Universe currUniverse = new Universe(size);
 
-        Universe nextUniverse = generate(currUniverse, generations);
+        // Universe nextUniverse = generate(currUniverse, generations);
+        generate(currUniverse);
 
-        System.out.println(nextUniverse);
+        // System.out.println(nextUniverse);
 
         scanner.close();
+    }
+
+    public static void generate(Universe currUniverse) {
+        Universe universe = new Universe(currUniverse.getBoard());
+        Universe nextUniverse = null;
+
+        int generation = 1;
+        int liveCells = 0;
+        int LIMIT = 20;
+
+        while (generation < LIMIT) {
+
+            nextUniverse = generateNext(universe);
+            liveCells = nextUniverse.getLiveCells();
+
+            System.out.println("Generation #" + generation++);
+            System.out.println("Alive: " + liveCells);
+            System.out.println(nextUniverse);
+
+            /*
+            try {
+                if (System.getProperty("os.name").contains("Windows"))
+                    new ProcessBuilder("cmd","/c","cls").inheritIO().start().waitFor();
+                else
+                    Runtime.getRuntime().exec("clear");
+            }
+            catch (IOException | InterruptedException e) {}
+            */
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            universe = new Universe(nextUniverse.getBoard());
+        }
     }
 
     public static Universe generate(Universe currUniverse, int generations) {
