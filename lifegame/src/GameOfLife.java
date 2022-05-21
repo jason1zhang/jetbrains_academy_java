@@ -1,140 +1,110 @@
-import java.io.IOException;
-import java.util.*;
+import javax.swing.*;
+import java.awt.*;
 
-public class GameOfLife {
+public class GameOfLife extends JFrame{
+    private JLabel labelGeneation;
+    private JLabel labelAlive;
+
+    private final static int WIDTH = 600;
+    private final static int HEIGHT = 700;
+
+    private Universe universe;    
+    private int generation;
+
     public static void main(String[] args) throws Exception {
-        Scanner scanner = new Scanner(System.in);
+        GameOfLife game = new GameOfLife();
+        game.startGame();
+    }      
 
-        int size = scanner.nextInt();
-        // int seed = scanner.nextInt();
-        // int generations = scanner.nextInt();
+    public GameOfLife() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle("Game Of Life");
+        setResizable(false);
+        setSize(WIDTH, HEIGHT);
+        setVisible(true);
 
-        // Universe currUniverse = new Universe(size, seed);
-        Universe currUniverse = new Universe(size);
+        setLayout(new BorderLayout());
 
-        // Universe nextUniverse = generate(currUniverse, generations);
-        generate(currUniverse);
+        initComponents();
 
-        // System.out.println(nextUniverse);
-
-        scanner.close();
+        this.universe = new Universe();
+        this.generation = 0;
     }
 
-    public static void generate(Universe currUniverse) {
-        Universe universe = new Universe(currUniverse.getBoard());
-        Universe nextUniverse = null;
+    private void initComponents() {
+        // construct a panel to hold the "Generation" label and "Alive" label
+        JPanel panelStatus = new JPanel();        
+        this.labelGeneation = new JLabel("   Generation #");
+        this.labelGeneation.setName("GenerationLabel");
+        this.labelGeneation.setFont(new Font("Courier", Font.BOLD, 16));
+        this.labelGeneation.setForeground(Color.BLACK);
+        this.labelGeneation.setHorizontalAlignment(SwingConstants.LEFT);
 
-        int generation = 1;
-        int liveCells = 0;
+        this.labelAlive = new JLabel("   Alive: ");
+        this.labelAlive.setName("AliveLabel");
+        this.labelAlive.setFont(new Font("Courier", Font.BOLD, 16));
+        this.labelAlive.setForeground(Color.BLACK);
+        this.labelAlive.setHorizontalAlignment(SwingConstants.LEFT);
+
+        panelStatus.setLayout(new BorderLayout(5, 5));
+        panelStatus.add(this.labelGeneation, BorderLayout.NORTH);
+        panelStatus.add(this.labelAlive, BorderLayout.SOUTH);
+
+        this.add(panelStatus, BorderLayout.NORTH);
+    }
+
+    public void startGame() {
         int LIMIT = 20;
-
-        while (generation < LIMIT) {
-
-            nextUniverse = generateNext(universe);
-            liveCells = nextUniverse.getLiveCells();
-
-            System.out.println("Generation #" + generation++);
-            System.out.println("Alive: " + liveCells);
-            System.out.println(nextUniverse);
-
-            /*
-            try {
-                if (System.getProperty("os.name").contains("Windows"))
-                    new ProcessBuilder("cmd","/c","cls").inheritIO().start().waitFor();
-                else
-                    Runtime.getRuntime().exec("clear");
-            }
-            catch (IOException | InterruptedException e) {}
-            */
+        while (this.generation <= LIMIT) {
+            repaint();
 
             try {
-                Thread.sleep(1000);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
-            universe = new Universe(nextUniverse.getBoard());
+            this.universe = this.universe.generateNext();
         }
     }
 
-    public static Universe generate(Universe currUniverse, int generations) {
-        if (generations == 0) {
-            return currUniverse;
+    public void paint(Graphics g) {
+        super.paint(g);
+
+        Graphics2D g2 = (Graphics2D)g;
+        g2.setStroke(new BasicStroke(2.0f));
+        g2.setColor(Color.GRAY);
+
+        int startX = 30;
+        int startY = 120;
+        int length = (int)(HEIGHT - 1.5 * startY);
+        int size = this.universe.getSize();
+        int gridSize = length / (size);
+
+        // draw the rows
+        for (int i = 0; i <= size; i++) {
+            g2.drawLine(startX, startY + i * gridSize, startX + length, startY + i * gridSize);
+        }
+        
+        // draw the columns
+        for (int i = 0; i <= size; i++) {
+            g2.drawLine(startX + i * gridSize, startY, startX + i * gridSize, startY + length);
         }
 
-        Universe universe = new Universe(currUniverse.getBoard());
-        Universe nextUniverse = null;
+        g2.setColor(Color.BLACK);
+        Cell[][] board = this.universe.getBoard();
+        int liveCells = this.universe.getLiveCells();
+        this.generation++;
 
-        for (int i = 0; i < generations; i++) {
-            nextUniverse = generateNext(universe);
-            universe = new Universe(nextUniverse.getBoard());
-        }
+        this.labelGeneation.setText("   Generation #" + this.generation);
+        this.labelAlive.setText("   Alive: " + liveCells);
 
-        return nextUniverse;
-    }
-
-    public static Universe generateNext(Universe currUniverse) {
-        Cell[][] board = currUniverse.getBoard();
-        int size = board.length;
-
-        Cell[][] nextBoard = new Cell[size][size];
-
-        int adjCells;
- 
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-                adjCells = calcAdjCells(i, j, board);
-                Cell cell = board[i][j];
-
-                if ((cell.getState() == CellState.ALIVE && (adjCells == 2 || adjCells == 3))
-                        || (cell.getState() == CellState.DEAD && adjCells == 3)) {
-                    nextBoard[i][j] = new Cell(CellState.ALIVE, i, j);
-                } else {
-                    nextBoard[i][j] = new Cell(CellState.DEAD, i, j);
+                if (board[i][j].getState() == CellState.ALIVE) {
+                    g2.fillRect(startX + j * gridSize, startY + i * gridSize, gridSize, gridSize);
                 }
             }
         }
-
-        return new Universe(nextBoard);
-    }    
-
-    /**
-     * calcuate the adjacent alive cells in a position.
-     * If the cell has mine in it, always return 0.
-     * 
-     * @param i the x coordinate (row)
-     * @param j the y coordinate (col)
-     * @return the number of adjacent mines
-     */
-    private static int calcAdjCells(int i, int j, Cell[][] board) {
-        int size = board.length;
-        
-        int adjCells = 0;
-
-        // north
-        adjCells += board[(i - 1 + size) % size][j].getState().getValue();
-
-        // south
-        adjCells += board[(i + 1 + size) % size][j].getState().getValue();
-
-        // west
-        adjCells += board[i][(j - 1 + size) % size].getState().getValue();
-
-        // east
-        adjCells += board[i][(j + 1 + size) % size].getState().getValue();
-
-        // north west
-        adjCells += board[(i - 1 + size) % size][(j - 1 + size) % size].getState().getValue();
-
-        // north east
-        adjCells += board[(i - 1 + size) % size][(j + 1 + size) % size].getState().getValue();
-
-        // south west
-        adjCells += board[(i + 1 + size) % size][(j - 1 + size) % size].getState().getValue();
-
-        // south east
-        adjCells += board[(i + 1 + size) % size][(j + 1 + size) % size].getState().getValue();
-
-        return adjCells;
     }
 }
