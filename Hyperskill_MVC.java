@@ -87,6 +87,7 @@ class Controller {
             model.increment();
             view.setText(Integer.toString(model.getNumber()));
         };
+        
         view.getButton().addActionListener(actionListener);
     }
 }
