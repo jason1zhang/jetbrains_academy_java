@@ -1,62 +1,148 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 
 public class GameOfLife extends JFrame{
-    private JLabel labelGeneation;
-    private JLabel labelAlive;
+    private JLabel geneationLabel;
+    private JLabel aliveLabel;
 
-    private final static int WIDTH = 600;
-    private final static int HEIGHT = 700;
+    private JToggleButton buttonPlayToggle;
+    private boolean isResumed;
+
+    private JButton buttonReset;
+    private boolean isStarted;
+
+    private final static int WIDTH = 1200;
+    private final static int HEIGHT = 900;
 
     private Universe universe;    
     private int generation;
 
-    public static void main(String[] args) throws Exception {
-        GameOfLife game = new GameOfLife();
-        game.startGame();
+    public static void main(String[] args) throws InterruptedException {
+        SwingUtilities.invokeLater(GameOfLife::new);
     }      
 
     public GameOfLife() {
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setTitle("Game Of Life");
-        setResizable(false);
+        super("Game of Life");
         setSize(WIDTH, HEIGHT);
-        setVisible(true);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout(2, 2));
 
-        setLayout(new BorderLayout());
+        setResizable(false);
 
-        initComponents();
+        // set up control panel
+        JPanel controlPanel = new JPanel(new BorderLayout(2, 2));
+        controlPanel.setSize(WIDTH/4, HEIGHT/4);
+        
+
+        // set up button panel
+        JPanel buttonPanel = new JPanel(new BorderLayout(2, 2));
+        buttonPanel.setSize(WIDTH/4, HEIGHT/16);
+
+        this.buttonPlayToggle = new JToggleButton("Resume");
+        this.buttonPlayToggle.setName(("PlayToggleButton"));
+        actOnToggleButton();        
+
+        this.buttonReset = new JButton("Start");
+        this.buttonReset.setName("ResetButton");
+        this.buttonReset.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                isStarted = !isStarted;
+                System.out.println("Start Button pressed!");
+
+                startGame();
+            }
+        });
+
+        buttonPanel.add(this.buttonPlayToggle, BorderLayout.WEST);
+        buttonPanel.add(this.buttonReset, BorderLayout.EAST);
+        controlPanel.add(buttonPanel, BorderLayout.NORTH);
+
+        // set up labels panel
+        JPanel labelPanel = new JPanel(new BorderLayout(5, 5));        
+        labelPanel.setSize(WIDTH/4, HEIGHT/16);
+
+        this.geneationLabel = new JLabel();
+        this.geneationLabel.setName("GenerationLabel");
+        this.geneationLabel.setFont(new Font("Courier", Font.BOLD, 15));
+        this.geneationLabel.setForeground(Color.BLACK);
+        this.geneationLabel.setHorizontalAlignment(SwingConstants.LEFT);
+
+        this.aliveLabel = new JLabel();
+        this.aliveLabel.setName("AliveLabel");
+        this.aliveLabel.setFont(new Font("Courier", Font.BOLD, 15));
+        this.aliveLabel.setForeground(Color.BLACK);
+        this.aliveLabel.setHorizontalAlignment(SwingConstants.LEFT);
+
+        labelPanel.add(this.geneationLabel, BorderLayout.NORTH);
+        labelPanel.add(this.aliveLabel, BorderLayout.CENTER);
+        controlPanel.add(labelPanel, BorderLayout.CENTER);
+        add(controlPanel, BorderLayout.WEST);
+
+        this.isResumed = false;
+        this.isStarted = false;
+
+        // set up cell panel
 
         this.universe = new Universe();
-        this.generation = 0;
+        this.generation = 1;
+        setLabels();
+        
+        CellPanel cellPanel = new CellPanel(this.universe);
+        cellPanel.setSize(new Dimension(getWidth() - controlPanel.getWidth(), getHeight()));
+        add(cellPanel, BorderLayout.CENTER);    // Important: do NOT set to BorderLayout.EAST
+        setVisible(true);
+
+        Thread universeEvolution = new Thread(() -> {
+            while (universe.getLiveCells() > 0) {
+                try {
+                    universe = universe.generateNext();
+                    generation++;
+                    cellPanel.setUniverse(universe);
+
+                    Thread.sleep(2000L);
+                    setLabels();
+                    cellPanel.repaint();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        universeEvolution.start();
     }
 
-    private void initComponents() {
-        // construct a panel to hold the "Generation" label and "Alive" label
-        JPanel panelStatus = new JPanel();        
-        this.labelGeneation = new JLabel("   Generation #");
-        this.labelGeneation.setName("GenerationLabel");
-        this.labelGeneation.setFont(new Font("Courier", Font.BOLD, 16));
-        this.labelGeneation.setForeground(Color.BLACK);
-        this.labelGeneation.setHorizontalAlignment(SwingConstants.LEFT);
+    private void setLabels() {
+        geneationLabel.setText(String.format("   Generation #%d", generation));
+        aliveLabel.setText(String.format("   Alive: %d", universe.getLiveCells()));
+    }
 
-        this.labelAlive = new JLabel("   Alive: ");
-        this.labelAlive.setName("AliveLabel");
-        this.labelAlive.setFont(new Font("Courier", Font.BOLD, 16));
-        this.labelAlive.setForeground(Color.BLACK);
-        this.labelAlive.setHorizontalAlignment(SwingConstants.LEFT);
+    private void actOnToggleButton() {
+        ItemListener ItemListener = new ItemListener() {
+            public void itemStateChanged(ItemEvent itemEvent) {
+                int state = itemEvent.getStateChange();
 
-        panelStatus.setLayout(new BorderLayout(5, 5));
-        panelStatus.add(this.labelGeneation, BorderLayout.NORTH);
-        panelStatus.add(this.labelAlive, BorderLayout.SOUTH);
+                if (state == itemEvent.SELECTED) {
+                    isResumed = true;
+                    System.out.println("Toggle button selected");
+                } else {
+                    isResumed = false;
+                    System.out.println("Toggle button deselected");
+                }
+            }
+        };
 
-        this.add(panelStatus, BorderLayout.NORTH);
+        this.buttonPlayToggle.addItemListener(ItemListener);
     }
 
     public void startGame() {
-        int LIMIT = 20;
-        while (this.generation <= LIMIT) {
-            repaint();
+        // int LIMIT = 20;
+        System.out.println("Starting......game!");
+        while (this.isStarted == true) {
+            repaint();           
+
+            System.out.println("Starting......startgame() -> repaint!");
 
             try {
                 Thread.sleep(2000);
@@ -65,46 +151,6 @@ public class GameOfLife extends JFrame{
             }
 
             this.universe = this.universe.generateNext();
-        }
-    }
-
-    public void paint(Graphics g) {
-        super.paint(g);
-
-        Graphics2D g2 = (Graphics2D)g;
-        g2.setStroke(new BasicStroke(2.0f));
-        g2.setColor(Color.GRAY);
-
-        int startX = 30;
-        int startY = 120;
-        int length = (int)(HEIGHT - 1.5 * startY);
-        int size = this.universe.getSize();
-        int gridSize = length / (size);
-
-        // draw the rows
-        for (int i = 0; i <= size; i++) {
-            g2.drawLine(startX, startY + i * gridSize, startX + length, startY + i * gridSize);
-        }
-        
-        // draw the columns
-        for (int i = 0; i <= size; i++) {
-            g2.drawLine(startX + i * gridSize, startY, startX + i * gridSize, startY + length);
-        }
-
-        g2.setColor(Color.BLACK);
-        Cell[][] board = this.universe.getBoard();
-        int liveCells = this.universe.getLiveCells();
-        this.generation++;
-
-        this.labelGeneation.setText("   Generation #" + this.generation);
-        this.labelAlive.setText("   Alive: " + liveCells);
-
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                if (board[i][j].getState() == CellState.ALIVE) {
-                    g2.fillRect(startX + j * gridSize, startY + i * gridSize, gridSize, gridSize);
-                }
-            }
         }
     }
 }

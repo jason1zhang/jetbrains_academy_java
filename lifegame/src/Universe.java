@@ -1,7 +1,8 @@
 import java.util.Random;
 
 public class Universe {
-    private final static int SIZE = 10;
+    private final static int SIZE = 50;
+    private int generation;
 
     private Cell[][] board;
 
@@ -20,6 +21,8 @@ public class Universe {
                 }
             }
         }
+
+        this.generation = 1;
     }
 
     public Universe() {
@@ -41,6 +44,8 @@ public class Universe {
                 }
             }
         }
+
+        this.generation = 1;
     }
 
     public Universe(Cell[][] board) {
@@ -132,8 +137,14 @@ public class Universe {
             }
         }
 
+        this.generation++;
+
         return new Universe(nextBoard);
     }    
+
+    public int getGeneration() {
+        return this.generation;
+    }
 
     /**
      * calcuate the adjacent alive cells in a position.
