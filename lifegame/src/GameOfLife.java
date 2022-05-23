@@ -7,14 +7,17 @@ public class GameOfLife extends JFrame{
     private JLabel aliveLabel;
 
     private JToggleButton buttonPlayToggle;
-    private boolean isResumed;
+    private boolean isPaused;
+
+    private UniverseEvolution universeEvolution;
 
     private JButton buttonReset;
-    private boolean isStarted;
+    private boolean isReset;
 
     private final static int WIDTH = 1200;
     private final static int HEIGHT = 900;
 
+    private CellPanel cellPanel;
     private Universe universe;    
     private int generation;
 
@@ -23,6 +26,7 @@ public class GameOfLife extends JFrame{
     }      
 
     public GameOfLife() {
+
         super("Game of Life");
         setSize(WIDTH, HEIGHT);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -39,16 +43,16 @@ public class GameOfLife extends JFrame{
         JPanel buttonPanel = new JPanel(new BorderLayout(2, 2));
         buttonPanel.setSize(WIDTH/4, HEIGHT/16);
 
-        this.buttonPlayToggle = new JToggleButton("Resume");
+        this.buttonPlayToggle = new JToggleButton("Pause");
         this.buttonPlayToggle.setName(("PlayToggleButton"));
         actOnToggleButton();        
 
-        this.buttonReset = new JButton("Start");
+        this.buttonReset = new JButton("Restart");
         this.buttonReset.setName("ResetButton");
         this.buttonReset.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                isStarted = !isStarted;
+                isReset = !isReset;
                 System.out.println("Start Button pressed!");
 
                 startGame();
@@ -60,7 +64,8 @@ public class GameOfLife extends JFrame{
         controlPanel.add(buttonPanel, BorderLayout.NORTH);
 
         // set up labels panel
-        JPanel labelPanel = new JPanel(new BorderLayout(5, 5));        
+        // JPanel labelPanel = new JPanel(new BorderLayout(5, 5));        
+        JPanel labelPanel = new JPanel();        
         labelPanel.setSize(WIDTH/4, HEIGHT/16);
 
         this.geneationLabel = new JLabel();
@@ -68,20 +73,24 @@ public class GameOfLife extends JFrame{
         this.geneationLabel.setFont(new Font("Courier", Font.BOLD, 15));
         this.geneationLabel.setForeground(Color.BLACK);
         this.geneationLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        this.geneationLabel.setBounds(0, 0, WIDTH/4, 50);
 
         this.aliveLabel = new JLabel();
         this.aliveLabel.setName("AliveLabel");
         this.aliveLabel.setFont(new Font("Courier", Font.BOLD, 15));
         this.aliveLabel.setForeground(Color.BLACK);
         this.aliveLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        this.aliveLabel.setBounds(50, 50, WIDTH/4, 50);
 
-        labelPanel.add(this.geneationLabel, BorderLayout.NORTH);
-        labelPanel.add(this.aliveLabel, BorderLayout.CENTER);
+        // labelPanel.add(this.geneationLabel, BorderLayout.NORTH);
+        // labelPanel.add(this.aliveLabel, BorderLayout.CENTER);
+        labelPanel.add(this.geneationLabel);
+        labelPanel.add(this.aliveLabel);
         controlPanel.add(labelPanel, BorderLayout.CENTER);
         add(controlPanel, BorderLayout.WEST);
 
-        this.isResumed = false;
-        this.isStarted = false;
+        this.isPaused = false;
+        this.isReset = false;
 
         // set up cell panel
 
@@ -89,14 +98,35 @@ public class GameOfLife extends JFrame{
         this.generation = 1;
         setLabels();
         
-        CellPanel cellPanel = new CellPanel(this.universe);
+        cellPanel = new CellPanel(this.universe);
         cellPanel.setSize(new Dimension(getWidth() - controlPanel.getWidth(), getHeight()));
         add(cellPanel, BorderLayout.CENTER);    // Important: do NOT set to BorderLayout.EAST
         setVisible(true);
 
-        Thread universeEvolution = new Thread(() -> {
+        universeEvolution = new UniverseEvolution();
+
+        universeEvolution.start();
+    }
+
+
+    private class UniverseEvolution extends Thread {
+
+        public void resumeThread() {
+            synchronized(this) {
+               notify();
+            }
+        }
+
+        @Override
+        public void run() {
             while (universe.getLiveCells() > 0) {
                 try {
+                    synchronized(this) {
+                        while (isPaused) {
+                            wait();
+                        }
+                    }
+
                     universe = universe.generateNext();
                     generation++;
                     cellPanel.setUniverse(universe);
@@ -107,10 +137,8 @@ public class GameOfLife extends JFrame{
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }
-        });
-
-        universeEvolution.start();
+            }              
+        }        
     }
 
     private void setLabels() {
@@ -123,12 +151,13 @@ public class GameOfLife extends JFrame{
             public void itemStateChanged(ItemEvent itemEvent) {
                 int state = itemEvent.getStateChange();
 
-                if (state == itemEvent.SELECTED) {
-                    isResumed = true;
-                    System.out.println("Toggle button selected");
+                if (state == ItemEvent.SELECTED) {
+                    isPaused = true;
+                       buttonPlayToggle.setText("Resume");                    
                 } else {
-                    isResumed = false;
-                    System.out.println("Toggle button deselected");
+                    isPaused = false;
+                    buttonPlayToggle.setText("Pause");
+                    universeEvolution.resumeThread();
                 }
             }
         };
@@ -139,7 +168,7 @@ public class GameOfLife extends JFrame{
     public void startGame() {
         // int LIMIT = 20;
         System.out.println("Starting......game!");
-        while (this.isStarted == true) {
+        while (this.isReset == true) {
             repaint();           
 
             System.out.println("Starting......startgame() -> repaint!");
