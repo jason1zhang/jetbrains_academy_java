@@ -5,6 +5,8 @@ import java.awt.event.*;
 public class GameOfLife extends JFrame{
     private final static int WIDTH = 1200;
     private final static int HEIGHT = 900;
+    private final String TOGGLE_PLAY = "▶";
+    private final String TOGGLE_PAUSE = "▮▮";
 
     private JLabel geneationLabel;
     private JLabel aliveLabel;
@@ -38,7 +40,7 @@ public class GameOfLife extends JFrame{
         JPanel buttonPanel = new JPanel(new BorderLayout(2, 2));
         buttonPanel.setSize(WIDTH/4, HEIGHT/16);
 
-        this.buttonPlayToggle = new JToggleButton("Resume");
+        this.buttonPlayToggle = new JToggleButton(TOGGLE_PLAY);
         this.buttonPlayToggle.setName(("PlayToggleButton"));
         actOnToggleButton();
 
@@ -139,11 +141,11 @@ public class GameOfLife extends JFrame{
 
                 if (state == ItemEvent.SELECTED) {
                     isPaused = false;
-                    buttonPlayToggle.setText("Pause");
+                    buttonPlayToggle.setText(TOGGLE_PAUSE);
                     universeEvolution.resumeThread();
                 } else {
                     isPaused = true;
-                    buttonPlayToggle.setText("Resume");
+                    buttonPlayToggle.setText(TOGGLE_PLAY);
                 }
             }
         };
