@@ -5,13 +5,12 @@ import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
 @RestController
 public class RoomController {
     
     private final static int SIZE = 9;
 
-    private Room room;
+    private final Room room;
 
     public RoomController() {
         this.room = new Room(SIZE, SIZE) ;
