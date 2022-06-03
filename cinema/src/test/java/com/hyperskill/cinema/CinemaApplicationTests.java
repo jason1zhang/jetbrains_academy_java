@@ -1,10 +1,10 @@
-package com.cinema.room;
+package com.hyperskill.cinema;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class RoomApplicationTests {
+class CinemaApplicationTests {
 
 	@Test
 	void contextLoads() {
