@@ -101,4 +101,32 @@ public class CinemaService {
             throw new TokenExpiredException("Wrong token!");
         }
     }
+
+    public Map<String, Object> getStats(String password) throws WrongPasswordException {
+        if (password == null || !password.equals("super_secret")) {
+            throw new WrongPasswordException("The password is wrong!");
+        }
+
+        List<Seat> allSeats = getAvailableSeats();
+
+        int current_income = 0;
+        int number_of_available_seats = 0;
+        int number_of_purchased_tickets = 0;
+
+        for (Seat seat : allSeats) {
+            if (seat.getIsTaken()) {
+                number_of_purchased_tickets++;
+                current_income += seat.getPrice();
+            } else {
+                number_of_available_seats++;
+            }
+        }
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("current_income", current_income);
+        map.put("number_of_available_seats", number_of_available_seats);
+        map.put("number_of_purchased_tickets", number_of_purchased_tickets);
+
+        return map;
+    }
 }

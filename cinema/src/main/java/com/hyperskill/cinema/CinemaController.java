@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -29,5 +30,10 @@ public class CinemaController {
     @PostMapping("/return")
     public ResponseEntity<Map<String, Object>> returnTicket(@RequestBody Token token) {
         return new ResponseEntity<Map<String, Object>>(this.cinemaService.returnTicket(token), HttpStatus.OK);
+    }     
+
+    @PostMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getStats(@RequestParam(required = false) String password) {
+        return new ResponseEntity<Map<String, Object>>(this.cinemaService.getStats(password), HttpStatus.OK);
     }     
 }

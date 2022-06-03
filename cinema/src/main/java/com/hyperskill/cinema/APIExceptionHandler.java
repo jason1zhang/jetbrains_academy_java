@@ -34,4 +34,12 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    @ExceptionHandler(WrongPasswordException.class)
+    public ResponseEntity<Object> handleWrongPasswordException(WrongPasswordException ex) {
+        String message = ex.getMessage();
+        APIRequestError error = new APIRequestError(message, HttpStatus.UNAUTHORIZED, LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
 }
