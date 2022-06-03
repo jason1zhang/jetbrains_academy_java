@@ -1,5 +1,7 @@
 package com.hyperskill.cinema;
 
+import java.util.UUID;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class Seat {
@@ -8,6 +10,9 @@ public class Seat {
 
     @JsonIgnore
     private boolean isTaken;
+
+    @JsonIgnore
+    private UUID uuid;
 
     public Seat() {
     }
@@ -36,6 +41,14 @@ public class Seat {
 
     public void setTaken(boolean isTaken) {
         this.isTaken = isTaken;
+    }
+
+    public UUID getUuid() {
+        return this.uuid;
+    }
+
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
     }
 
     @Override

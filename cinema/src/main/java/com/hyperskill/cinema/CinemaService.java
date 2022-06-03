@@ -1,9 +1,11 @@
 package com.hyperskill.cinema;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Service;
@@ -53,7 +55,7 @@ public class CinemaService {
         return this.map;
     }
 
-    public Seat purchaseTicket(Seat seat) throws SeatIsTakenException, SeatNotFoundException {
+    public Map<String, Object> purchaseTicket(Seat seat) throws SeatIsTakenException, SeatNotFoundException {
         if (seat.getRow() > SIZE || seat.getRow() <= 0 || seat.getColumn() > SIZE || seat.getColumn() <= 0) {
             throw new SeatNotFoundException("The number of a row or a column is out of bounds!");
         }
@@ -64,11 +66,39 @@ public class CinemaService {
                 .findAny();
 
         if (opt.isPresent()) {
+            UUID uuid = UUID.randomUUID();
+
             Seat seatTaken = opt.get();
             seatTaken.setTaken(true);
-            return seatTaken;
+            seatTaken.setUuid(uuid);
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("token", uuid);
+            map.put("ticket", seatTaken);
+
+            return map;
         } else {
             throw new SeatIsTakenException("The ticket has been already purchased!");
+        }
+    }
+
+    public Map<String, Object> returnTicket(Token token) throws TokenExpiredException {
+        Optional<Seat> opt = getAvailableSeats()
+                .stream()
+                .filter(seat -> token.getToken().equals(seat.getUuid()))
+                .findAny();
+
+        if (opt.isPresent())  {
+            Seat seatToken = opt.get();
+            seatToken.setUuid(null);
+            seatToken.setTaken(false);  // make the seat available again
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("returned_ticket", seatToken);
+
+            return map;
+        } else {
+            throw new TokenExpiredException("Wrong token!");
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.hyperskill.cinema;
 
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,12 @@ public class CinemaController {
     }      
         
     @PostMapping("/purchase")
-    public ResponseEntity<Seat> purchaseTicket(@RequestBody Seat seat) {
-        return new ResponseEntity<Seat>(this.cinemaService.purchaseTicket(seat), HttpStatus.OK);
-    }      
+    public ResponseEntity<Map<String, Object>> purchaseTicket(@RequestBody Seat seat) {
+        return new ResponseEntity<Map<String, Object>>(this.cinemaService.purchaseTicket(seat), HttpStatus.OK);
+    }     
+
+    @PostMapping("/return")
+    public ResponseEntity<Map<String, Object>> returnTicket(@RequestBody Token token) {
+        return new ResponseEntity<Map<String, Object>>(this.cinemaService.returnTicket(token), HttpStatus.OK);
+    }     
 }
