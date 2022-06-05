@@ -6,32 +6,13 @@ package tracker;
 import java.util.Scanner;
 
 public class App {
-    public String getGreeting() {
-        return "Hello World!";
-    }
 
     public static void main(String[] args) {
-        // System.out.println(new App().getGreeting());
-
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Learning Progress Tracker");
+        Tracker tracker = new Tracker();
+        tracker.startTracker(scanner);
 
-        String cmd = null;
-        while (true) {
-
-            cmd = scanner.nextLine();
-
-            if (cmd == null || cmd.trim().length() == 0) {
-                System.out.println("No input.");
-            } else if (cmd.equals("exit")) {
-                System.out.println("Bye!");
-                break;
-            } else {
-                System.out.println("Error: unknown command!");
-            }
-        }
-
-        scanner.close();        
+        scanner.close();
     }
 }
