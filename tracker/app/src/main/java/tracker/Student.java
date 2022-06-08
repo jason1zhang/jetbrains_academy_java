@@ -1,45 +1,58 @@
 package tracker;
 
 public class Student {
-    private String info;
     private String firstName;
     private String lastName;
     private String email;
-    private boolean validInfo;
 
-    public Student(String info) {
-        this.info = info;
-        this.validInfo = true;
-
-        extractInfo();
+    public Student() {
     }
 
-    private void extractInfo() {
-        String[] infoArray = this.info.split(" ");
+    public String getFirstName() {
+        return this.firstName;
+    }
 
-        int len = infoArray.length;
-        if (len < 3) {
-            this.validInfo = false;
-            return;
+    public boolean setFirstName(String firstName) {
+        if (!validateFirstName(firstName)) {
+            return false;
         }
 
-        this.firstName = infoArray[0];
+        this.firstName = firstName;
+        return true;
+    }
 
-        StringBuilder sb = new StringBuilder();
-        for (int i = 1; i < len - 1; i++) {
-            sb.append(infoArray[i]).append(" ");
+    public String getLastName() {
+        return this.lastName;
+    }
+
+    public boolean setLastName(String lastName) {
+        if (!validateLastName(lastName)) {
+            return false;
         }
-        this.lastName = sb.toString();
 
-        this.email = infoArray[len - 1];
+        this.lastName = lastName;
+        return true;
     }
 
-    public boolean validateFirstName() {
-        return validateName(this.firstName);
+    public String getEmail() {
+        return this.email;
     }
 
-    public boolean validateLastName() {
-        for (String str : this.lastName.split(" ")) {
+    public boolean setEmail(String email) {
+        if (!validateEmail(email)) {
+            return false;
+        }
+
+        this.email = email;
+        return true;
+    }
+
+    private boolean validateFirstName(String firstName) {
+        return validateName(firstName);
+    }
+
+    private boolean validateLastName(String lastName) {
+        for (String str : lastName.split(" ")) {
             if (!validateName(str)) {
                 return false;
             }
@@ -48,29 +61,13 @@ public class Student {
         return true;
     }
 
-    public boolean validateEmail() {
+    private boolean validateEmail(String email) {
         String pattern = "^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-]+$";
-        return this.email.matches(pattern);
+        return email.matches(pattern);
     }
 
     private boolean validateName(String name) {
         String pattern = "[a-zA-Z](['-]?[a-zA-Z]+)+";
         return name.matches(pattern);
-    }
-
-    public String getFirstName() {
-        return this.firstName;
-    }
-
-    public String getLastName() {
-        return this.lastName;
-    }
-
-    public String getEmail() {
-        return this.email;
-    }
-
-    public boolean isValidInfo() {
-        return this.validInfo;
     }
 }
