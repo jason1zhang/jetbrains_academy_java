@@ -4,16 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StudentService {
-    List<Student> students;
+    private final List<Student> students;
+    private int studentID;
 
     public StudentService() {
-        students = new ArrayList<>();
+        this.students = new ArrayList<>();
+        this.studentID = 10000;
     }
 
-    public boolean addStudent(String studentInfo) {
+    public boolean addStudent(String input) {
         Student student = new Student();
 
-        String[] infoArray = studentInfo.split(" ");
+        String[] infoArray = input.split(" ");
 
         int len = infoArray.length;
         if (len < 3) {
@@ -36,14 +38,95 @@ public class StudentService {
             return false;
         }
 
-        if (!student.setEmail(infoArray[len - 1])) {
+        if (!student.validateEmail(infoArray[len - 1])) {
             System.out.println("Incorrect email.");
             return false;
+        } else {
+            if (this.students
+                    .stream()
+                    .anyMatch((s) -> s.getEmail().equals(infoArray[len - 1]))) {
+                System.out.println("This email is already taken.");
+                return false;
+            }
+
+            student.setEmail(infoArray[len - 1]);
         }
 
-        students.add(student);
+        student.setId(Integer.toString(studentID));
+        studentID++;
+
+        this.students.add(student);
 
         System.out.println("The student has been added.");
         return true;
+    }
+
+    public List<Student> getStudents() {
+        return this.students;
+    }
+
+    public void listStudents() {
+        if (this.students.size() == 0) {
+            System.out.println("No students found.");
+            return;
+        }
+
+        System.out.println("Students:");
+        this.students
+                .forEach((student) -> System.out.println(student.getId()));
+    }
+
+    public void addPoints(String input) {
+        String[] infoArray = input.split(" ");
+
+        if (infoArray.length != 5) {
+            System.out.println("Incorrect points format.");
+            return;
+        }
+
+        String id = infoArray[0];
+
+        if (this.students
+                .stream()
+                .noneMatch((s) -> s.getId().equals(id))) {
+            System.out.println("No student is found for id=" + id);
+            return;
+        }
+
+        for (String str : infoArray) {
+            if (!str.matches("[0-9]+")) {
+                System.out.println("Incorrect points format.");
+                return;
+            }
+        }
+
+        Student student = this.students
+                .stream()
+                .filter((s) -> s.getId().equals(id))
+                .findFirst()
+                .get();
+
+        student.setPoints(Integer.parseInt(infoArray[1]),
+                Integer.parseInt(infoArray[2]),
+                Integer.parseInt(infoArray[3]),
+                Integer.parseInt(infoArray[4]));
+
+        System.out.println("Points updated.");
+    }
+
+    public void findStudent(String input) {
+
+        if (this.students
+                .stream()
+                .noneMatch((s) -> s.getId().equals(input))) {
+            System.out.println("No student is found for id=" + input);
+            return;
+        }
+
+        System.out.println(this.students
+                .stream()
+                .filter((s) -> s.getId().equals(input))
+                .findFirst()
+                .get());
     }
 }

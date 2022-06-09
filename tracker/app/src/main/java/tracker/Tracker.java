@@ -27,6 +27,18 @@ public class Tracker {
                     System.out.println("Enter 'exit' to exit the program");
                     break;
 
+                case Command.LIST:
+                    service.listStudents();
+                    break;
+
+                case Command.ADD_POINTS:
+                    addPoints(scanner);
+                    break;
+
+                case Command.FIND:
+                    findStudent(scanner);
+                    break;
+
                 case Command.EXIT:
                     System.out.println("Bye!");
                     return;
@@ -53,6 +65,36 @@ public class Tracker {
                 if (service.addStudent(input)) {
                     studentCount++;
                 }
+            }
+        }
+    }
+
+    private void addPoints(Scanner scanner) {
+        System.out.println("Enter an id and points or 'back' to return:");
+
+        String input = null;
+        while (true) {
+            input = scanner.nextLine().trim();
+
+            if (Command.BACK.equals(input)) {
+                return;
+            } else {
+                service.addPoints(input);
+            }
+        }
+    }
+
+    private void findStudent(Scanner scanner) {
+        System.out.println("Enter an id or 'back' to return:");
+
+        String input = null;
+        while (true) {
+            input = scanner.nextLine().trim();
+
+            if (Command.BACK.equals(input)) {
+                return;
+            } else {
+                service.findStudent(input);
             }
         }
     }
