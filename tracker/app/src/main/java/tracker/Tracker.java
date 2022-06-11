@@ -39,6 +39,10 @@ public class Tracker {
                     findStudent(scanner);
                     break;
 
+                case Command.STATS:
+                    courseStats(scanner);
+                    break;                    
+
                 case Command.EXIT:
                     System.out.println("Bye!");
                     return;
@@ -95,6 +99,34 @@ public class Tracker {
                 return;
             } else {
                 service.findStudent(input);
+            }
+        }
+    }
+
+    private void courseStats(Scanner scanner) {
+        System.out.println("Type the name of a course to see details or 'back' to quit:");
+
+        CourseStats stats = new CourseStats(this.service.getStudents());
+        stats.getStats();
+
+        String input = null;
+        while (true) {
+            input = scanner.nextLine().trim();
+
+            if (Command.BACK.equals(input)) {
+                return;
+            } else {
+                switch(input.toLowerCase()) {
+                    case "java":
+                    case "dsa":
+                    case "databases":
+                    case "spring":
+                        stats.displayCourseStats(input);
+                        break;
+                    default:
+                        System.out.println("Unknown course.");
+                        break;
+                }
             }
         }
     }

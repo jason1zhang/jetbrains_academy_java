@@ -8,4 +8,5 @@ public class Command {
     public static final String LIST = "list";
     public static final String ADD_POINTS = "add points";
     public static final String FIND = "find";
+    public static final String STATS = "statistics";
 }

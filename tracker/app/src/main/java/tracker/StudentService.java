@@ -115,7 +115,6 @@ public class StudentService {
     }
 
     public void findStudent(String input) {
-
         if (this.students
                 .stream()
                 .noneMatch((s) -> s.getId().equals(input))) {

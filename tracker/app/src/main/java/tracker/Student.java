@@ -12,10 +12,10 @@ public class Student {
     public Student() {
         courses = new ArrayList<>();
 
-        Course courseJava = new Course("Java");
-        Course courseDSA = new Course("DSA");
-        Course courseDB = new Course("Databases");
-        Course courseSpring = new Course("Spring");
+        Course courseJava = new Course("Java", 600);
+        Course courseDSA = new Course("DSA", 400);
+        Course courseDB = new Course("Databases", 480);
+        Course courseSpring = new Course("Spring", 550);
 
         courses.add(courseJava);
         courses.add(courseDSA);
@@ -74,6 +74,11 @@ public class Student {
         this.courses.get(1).setPoint(this.courses.get(1).getPoint() + pointDSA);
         this.courses.get(2).setPoint(this.courses.get(2).getPoint() + pointDB);
         this.courses.get(3).setPoint(this.courses.get(3).getPoint() + pointSpring);
+
+        this.courses.get(0).setActivity(pointJava == 0 ? this.courses.get(0).getActivity() : this.courses.get(0).getActivity() + 1);
+        this.courses.get(1).setActivity(pointDSA == 0 ? this.courses.get(1).getActivity() : this.courses.get(1).getActivity() + 1);
+        this.courses.get(2).setActivity(pointDB == 0 ? this.courses.get(2).getActivity() : this.courses.get(2).getActivity() + 1);
+        this.courses.get(3).setActivity(pointSpring == 0 ? this.courses.get(3).getActivity() : this.courses.get(3).getActivity() + 1);
     }
 
     @Override
