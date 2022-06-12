@@ -3,11 +3,40 @@
  */
 package tracker;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class AppTest {
     @Test void appHasAGreeting() {
         App classUnderTest = new App();
         // assertNotNull(classUnderTest.getGreeting(), "app should have a greeting");
+    }
+
+    @ParameterizedTest
+    @DisplayName("Invalid first names should return false")
+    @ValueSource(strings = {"Jim.", "-bad", "'gad", "a", "alloha-", "a-'", "a-'b"})
+    void badFirstName(String input) {
+        Student student = new Student();
+        assertFalse(student.setFirstName(input));
+    }
+
+    @ParameterizedTest
+    @DisplayName("Valid emails should return true")
+    @ValueSource(strings = {"anny.md@mail.edu", "mama1@2.3"})
+    void goodEmail(String input) {
+        Student student = new Student();
+        assertTrue(student.validateEmail(input));
+    }
+
+    @ParameterizedTest
+    @DisplayName("Valid inputs of adding students should return true")
+    @ValueSource(strings = {"John Smith jsmith@hotmail.com", "Anny Doolittle anny.md@mail.edu", "Jean-Claude O'Conner jcda123@google.net"})
+    void goodAddStudent(String input) {
+        StudentService service = new StudentService();
+        assertTrue(service.addStudent(input));
     }
 }
