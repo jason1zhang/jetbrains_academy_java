@@ -43,6 +43,10 @@ public class Tracker {
                     courseStats(scanner);
                     break;
 
+                case Command.NOTIFY:
+                    service.notifyStudent();
+                    break;
+
                 case Command.EXIT:
                     System.out.println("Bye!");
                     return;

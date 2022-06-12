@@ -75,6 +75,12 @@ public class Student {
         this.courses.get(2).setPoint(this.courses.get(2).getPoint() + pointDB);
         this.courses.get(3).setPoint(this.courses.get(3).getPoint() + pointSpring);
 
+        this.courses.forEach(course -> {
+            if (course.getPoint() == course.getTotalPoint()) {
+                course.setCompleted(true);
+            }
+        });
+
         this.courses.get(0).setActivity(pointJava == 0 ? this.courses.get(0).getActivity() : this.courses.get(0).getActivity() + 1);
         this.courses.get(1).setActivity(pointDSA == 0 ? this.courses.get(1).getActivity() : this.courses.get(1).getActivity() + 1);
         this.courses.get(2).setActivity(pointDB == 0 ? this.courses.get(2).getActivity() : this.courses.get(2).getActivity() + 1);
@@ -111,5 +117,20 @@ public class Student {
     private boolean validateName(String name) {
         String pattern = "[a-zA-Z](['-]?[a-zA-Z]+)+";
         return name.matches(pattern);
+    }
+
+    public String notifyMessage() {
+        StringBuilder sb = new StringBuilder();
+
+        for (Course course : this.courses) {
+            if (course.isCompleted() && !course.isNotified()) {
+                sb.append(String.format("To: %s\nRe: Your Learning Progress\nHello, %S %s! You have accomplished our %S course!\n", 
+                            this.email, this.firstName, this.lastName, course.getName()));
+                
+                course.setNotified(true);
+            }
+        }
+
+        return sb.toString();
     }
 }

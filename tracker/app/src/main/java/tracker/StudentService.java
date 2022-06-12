@@ -128,4 +128,20 @@ public class StudentService {
                 .findFirst()
                 .get());
     }
+
+    public void notifyStudent() {
+        StringBuilder sb = new StringBuilder();
+        int count = 0;
+        
+        for (Student student : this.students) {
+            String msg = student.notifyMessage();
+            if (msg.length() > 0) {
+                count++;
+                sb.append(msg);
+            }
+        }
+
+        System.out.print(sb.toString());
+        System.out.printf("Total %d students have been notified.\n", count);
+    }
 }

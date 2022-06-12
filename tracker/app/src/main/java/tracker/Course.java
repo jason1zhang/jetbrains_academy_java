@@ -5,12 +5,16 @@ public class Course {
     private final int totalPoint;
     private int point;
     private int activity;
+    private boolean isCompleted;
+    private boolean isNotified;
 
     public Course(String name, int totalPoint) {
         this.name = name;
         this.totalPoint = totalPoint;
         this.point = 0;
         this.activity = 0;
+        this.isCompleted = false;
+        this.isNotified = false;
     }
 
     public String getName() {
@@ -39,6 +43,22 @@ public class Course {
 
     public int getTotalPoint() {
         return totalPoint;
+    }
+
+    public boolean isCompleted() {
+        return this.isCompleted;
+    }
+
+    public void setCompleted(boolean isCompleted) {
+        this.isCompleted = isCompleted;
+    }
+
+    public boolean isNotified() {
+        return this.isNotified;
+    }
+
+    public void setNotified(boolean isNotified) {
+        this.isNotified = isNotified;
     }
 
     public static String getCourseName(int index) {
