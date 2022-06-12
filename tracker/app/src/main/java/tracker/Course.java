@@ -3,7 +3,7 @@ package tracker;
 public class Course {
     private String name;
     private final int totalPoint;
-    private int point;    
+    private int point;
     private int activity;
 
     public Course(String name, int totalPoint) {
@@ -42,7 +42,7 @@ public class Course {
     }
 
     public static String getCourseName(int index) {
-        switch(index) {
+        switch (index) {
             case 0:
                 return "Java";
             case 1:

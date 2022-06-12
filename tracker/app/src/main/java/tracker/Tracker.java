@@ -41,7 +41,7 @@ public class Tracker {
 
                 case Command.STATS:
                     courseStats(scanner);
-                    break;                    
+                    break;
 
                 case Command.EXIT:
                     System.out.println("Bye!");
@@ -116,7 +116,7 @@ public class Tracker {
             if (Command.BACK.equals(input)) {
                 return;
             } else {
-                switch(input.toLowerCase()) {
+                switch (input.toLowerCase()) {
                     case "java":
                     case "dsa":
                     case "databases":

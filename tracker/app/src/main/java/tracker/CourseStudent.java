@@ -5,7 +5,7 @@ public class CourseStudent {
     private String studentID;
     private int studentPoint;
     private final int totalPoint;
-    
+
     public CourseStudent(String courseName, String studentID, int studentPoint, int totalPoint) {
         this.courseName = courseName;
         this.studentID = studentID;

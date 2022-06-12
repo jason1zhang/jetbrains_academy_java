@@ -45,7 +45,7 @@ public class CourseStats {
         }
 
         if (minCount == 0 && maxCount == 0) {
-            switch(flag) {
+            switch (flag) {
                 case "popular":
                     System.out.println("Most popular: n/a");
                     System.out.println("Least popular: n/a");
@@ -55,12 +55,6 @@ public class CourseStats {
                     System.out.println("Highest activity: n/a");
                     System.out.println("Lowest activity: n/a");
                     return;
-
-                case "difficulty":
-                    System.out.println("Easiest course: n/a");
-                    System.out.println("Hardest course: n/a");
-                    return;
-
             }
         }
 
@@ -74,7 +68,7 @@ public class CourseStats {
             }
         }
 
-        switch(flag) {
+        switch (flag) {
             case "popular":
                 System.out.print("Most popular: ");
                 break;
@@ -83,9 +77,6 @@ public class CourseStats {
                 System.out.print("Highest activity: ");
                 break;
 
-            case "difficulty":
-                System.out.print("Easiest course: ");
-                break;
             default:
                 break;
         }
@@ -98,7 +89,7 @@ public class CourseStats {
             }
         }
 
-        switch(flag) {
+        switch (flag) {
             case "popular":
                 System.out.print("Least popular: ");
                 break;
@@ -107,9 +98,6 @@ public class CourseStats {
                 System.out.print("Lowest activity: ");
                 break;
 
-            case "difficulty":
-                System.out.print("Hardest course: ");
-                break;
             default:
                 break;
         }
@@ -137,7 +125,6 @@ public class CourseStats {
         }
 
         if (Math.abs(minCount - 0.0) < 1e-6 && Math.abs(maxCount - 0.0) < 1e-6) {
-
             System.out.println("Easiest course: n/a");
             System.out.println("Hardest course: n/a");
             return;
@@ -183,15 +170,17 @@ public class CourseStats {
 
         for (Student student : this.students) {
             for (Course course : student.getCourses()) {
-                if (course.getName().toLowerCase().equals(courseName) && course.getPoint() != 0) {
-                    CourseStudent cs = new CourseStudent(courseName, student.getId(), course.getPoint(), course.getTotalPoint());
+                if (course.getName().toLowerCase().equals(courseName.toLowerCase()) && course.getPoint() != 0) {
+                    CourseStudent cs = new CourseStudent(course.getName(), student.getId(), course.getPoint(), course.getTotalPoint());
                     courseStudents.add(cs);
                     break;
                 }
             }
         }
 
-        courseStudents.sort(Comparator.comparing(CourseStudent::getStudentPoint).reversed().thenComparing(CourseStudent::getStudentID));
+        courseStudents.sort(Comparator.comparing(CourseStudent::getStudentPoint)
+                .reversed()
+                .thenComparing(CourseStudent::getStudentID));
 
         System.out.println(courseName.substring(0, 1).toUpperCase() + courseName.substring(1));
         System.out.print("id        points       completed\n");
