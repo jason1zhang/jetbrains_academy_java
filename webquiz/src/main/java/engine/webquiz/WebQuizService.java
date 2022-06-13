@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class WebQuizService {
-    private WebQuiz quiz;
+    private final WebQuiz quiz;
 
     public WebQuizService() {
         ArrayList<String> options = new ArrayList<>();
