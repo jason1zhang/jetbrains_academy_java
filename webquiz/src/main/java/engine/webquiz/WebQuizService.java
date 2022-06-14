@@ -1,25 +1,27 @@
 package engine.webquiz;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 @Service
 public class WebQuizService {
-    private final WebQuiz quiz;
+    
+    private final WebQuizRepository quizRepository;
 
     public WebQuizService() {
-        ArrayList<String> options = new ArrayList<>();
-        options.add("Robot");
-        options.add("Tea leaf");
-        options.add("Cup of coffee");
-        options.add("Bug");
-
-        quiz = new WebQuiz("The Java Logo", "What is depicted on the Java logo?", options);
+        quizRepository = new WebQuizRepository();
     }
 
-    public WebQuiz getQuiz() {
-        return this.quiz;
+    public void addWebQuiz(WebQuiz quiz) {
+        this.quizRepository.addWebQuiz(quiz);;
     }
-    
+
+    public List<WebQuiz> getAllQuizes() {
+        return this.quizRepository.getAllQuizes();
+    }
+
+    public WebQuiz getQuizById(int id) {
+        return this.quizRepository.getQuizById(id);
+    }    
 }
