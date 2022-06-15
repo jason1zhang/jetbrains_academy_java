@@ -2,24 +2,33 @@ package engine.webquiz;
 
 import java.util.ArrayList;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class WebQuiz {
 
     private int id;
 
+    @NotEmpty
     private String title;
+
+    @NotEmpty
     private String text;
+
+    @NotNull
+    @Size(min = 2, max = 4)
     private ArrayList<String> options;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)    
-    private int answer;
+    private ArrayList<Integer> answer;
 
     public WebQuiz() {
     }
 
-    public WebQuiz(String title, String text, ArrayList<String> options, int answer) {
+    public WebQuiz(String title, String text, ArrayList<String> options, ArrayList<Integer> answer) {
         this.title = title;
         this.text = text;
         this.options = options;
@@ -58,13 +67,11 @@ public class WebQuiz {
         this.id = id;
     }
 
-    public int getAnswer() {
+    public ArrayList<Integer> getAnswer() {
         return this.answer;
     }
 
-    public void setAnswer(int answer) {
+    public void setAnswer(ArrayList<Integer> answer) {
         this.answer = answer;
     }
-
-    
 }
