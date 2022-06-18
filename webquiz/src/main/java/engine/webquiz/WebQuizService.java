@@ -2,26 +2,24 @@ package engine.webquiz;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class WebQuizService {
     
-    private final WebQuizRepository quizRepository;
-
-    public WebQuizService() {
-        quizRepository = new WebQuizRepository();
-    }
+    @Autowired
+    private WebQuizRepository quizRepository;
 
     public void addWebQuiz(WebQuiz quiz) {
-        this.quizRepository.addWebQuiz(quiz);;
+        this.quizRepository.save(quiz);;
     }
 
     public List<WebQuiz> getAllQuizes() {
-        return this.quizRepository.getAllQuizes();
+        return (List<WebQuiz>) this.quizRepository.findAll();
     }
 
     public WebQuiz getQuizById(int id) {
-        return this.quizRepository.getQuizById(id);
+        return this.quizRepository.findById(id).get();
     }    
 }

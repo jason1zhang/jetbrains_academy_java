@@ -3,6 +3,7 @@ package engine.webquiz;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
@@ -37,6 +38,11 @@ public class WebQuizController {
       return new ResponseEntity<>("not valid due to validation error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(NoSuchElementException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<String> handleNoSuchElementException(NoSuchElementException e) {
+      return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+    }
 
     @GetMapping("api/quizzes")
     public List<WebQuiz> getAllQuizes() {
@@ -45,12 +51,7 @@ public class WebQuizController {
 
     @GetMapping("api/quizzes/{id}")
     public ResponseEntity<WebQuiz> getQuizById(@PathVariable int id) {
-        WebQuiz quiz = this.service.getQuizById(id);
-        if (quiz != null) {
-            return new ResponseEntity<>(this.service.getQuizById(id), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
+        return new ResponseEntity<>(this.service.getQuizById(id), HttpStatus.OK);
     }
 
     @PostMapping("/api/quizzes/{id}/solve")
