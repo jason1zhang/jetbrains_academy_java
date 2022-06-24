@@ -40,6 +40,8 @@ public class WebQuiz {
     @Column (name = "answer")
     private ArrayList<Integer> answer;
 
+    private String creator;
+
     public WebQuiz() {
     }
 
@@ -89,4 +91,14 @@ public class WebQuiz {
     public void setAnswer(ArrayList<Integer> answer) {
         this.answer = answer;
     }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
+    }
+
+    
 }

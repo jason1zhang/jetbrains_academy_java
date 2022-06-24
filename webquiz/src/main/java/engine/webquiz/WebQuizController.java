@@ -11,7 +11,12 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,8 +31,47 @@ public class WebQuizController {
     @Autowired
     private WebQuizService service;
 
+    @Autowired
+    private UserRepository repository;
+
+    @Autowired
+    private PasswordEncoder encoder;
+
+    @PostMapping("/api/register")
+    public User register(@Valid @RequestBody User user) {
+        user.setPassword(encoder.encode(user.getPassword()));
+        repository.save(user);
+        return user;
+    }
+
+    @DeleteMapping("api/quizzes/{id}")
+    public ResponseEntity<?> deleteQuizById(@PathVariable int id) {
+        WebQuiz quiz = this.service.getQuizById(id);
+
+        if (quiz == null) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        } else if (!quiz.getCreator().equals(getCurrentUser())) {
+            return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
+        } else {
+            service.deleteQuizById(id);
+            return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+        }
+    }
+
+    private String getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (!(authentication instanceof AnonymousAuthenticationToken)) {
+            String currentUserName = authentication.getName();
+            return currentUserName;
+        }
+
+        return null;
+    }
+
     @PostMapping("/api/quizzes")
     public WebQuiz addWebQuiz(@Valid @RequestBody WebQuiz quiz) {
+        quiz.setCreator(getCurrentUser());
         service.addWebQuiz(quiz);
         return quiz;
     }

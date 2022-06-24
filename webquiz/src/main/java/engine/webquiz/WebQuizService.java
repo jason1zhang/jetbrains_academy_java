@@ -21,5 +21,9 @@ public class WebQuizService {
 
     public WebQuiz getQuizById(int id) {
         return this.quizRepository.findById(id).get();
+    }
+
+    public void deleteQuizById(int id) {
+        this.quizRepository.delete(getQuizById(id));
     }    
 }
