@@ -1,18 +1,13 @@
 package engine.webquiz;
 
-import java.util.ArrayList;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "WebQuiz")
@@ -36,10 +31,11 @@ public class WebQuiz {
     @Column(name = "options")
     private ArrayList<String> options;
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)    
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column (name = "answer")
     private ArrayList<Integer> answer;
 
+    @JsonIgnore
     private String creator;
 
     public WebQuiz() {
@@ -93,12 +89,10 @@ public class WebQuiz {
     }
 
     public String getCreator() {
-        return creator;
+        return this.creator;
     }
 
     public void setCreator(String creator) {
         this.creator = creator;
     }
-
-    
 }

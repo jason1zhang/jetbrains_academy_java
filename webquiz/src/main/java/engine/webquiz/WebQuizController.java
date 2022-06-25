@@ -1,13 +1,5 @@
 package engine.webquiz;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.NoSuchElementException;
-
-import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,14 +8,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.ConstraintViolationException;
+import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @Validated
@@ -37,11 +29,21 @@ public class WebQuizController {
     @Autowired
     private PasswordEncoder encoder;
 
+    @PostMapping("/actuator/shutdown")
+    public ResponseEntity<?> shutDownEngine() {
+        return new ResponseEntity<>(null, HttpStatus.OK);
+    }
+
     @PostMapping("/api/register")
-    public User register(@Valid @RequestBody User user) {
-        user.setPassword(encoder.encode(user.getPassword()));
-        repository.save(user);
-        return user;
+    public ResponseEntity<?> register(@Valid @RequestBody User user) {
+        String email = user.getEmail();
+        if (repository.findByEmail(email) != null) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        } else {
+            user.setPassword(encoder.encode(user.getPassword()));
+            repository.save(user);
+            return new ResponseEntity<>(user, HttpStatus.OK);
+        }
     }
 
     @DeleteMapping("api/quizzes/{id}")
@@ -60,10 +62,9 @@ public class WebQuizController {
 
     private String getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
+
         if (!(authentication instanceof AnonymousAuthenticationToken)) {
-            String currentUserName = authentication.getName();
-            return currentUserName;
+            return authentication.getName();
         }
 
         return null;
@@ -79,13 +80,13 @@ public class WebQuizController {
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<String> handleConstraintViolationException(ConstraintViolationException e) {
-      return new ResponseEntity<>("not valid due to validation error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>("not valid due to validation error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NoSuchElementException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<String> handleNoSuchElementException(NoSuchElementException e) {
-      return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("api/quizzes")

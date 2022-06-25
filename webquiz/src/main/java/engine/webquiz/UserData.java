@@ -1,20 +1,19 @@
 package engine.webquiz;
 
-import java.util.Collection;
-import java.util.List;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
+import java.util.List;
 
 public class UserData implements UserDetails{
 
-    private User user;
+    private final User user;
 
     public UserData(User user) {
         this.user = user;
-    }    
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -50,5 +49,4 @@ public class UserData implements UserDetails{
     public boolean isEnabled() {
         return true;
     }
-    
 }

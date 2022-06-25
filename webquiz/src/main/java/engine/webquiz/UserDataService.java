@@ -18,5 +18,4 @@ public class UserDataService implements UserDetailsService {
 
         return new UserData(user);
     }
-    
 }

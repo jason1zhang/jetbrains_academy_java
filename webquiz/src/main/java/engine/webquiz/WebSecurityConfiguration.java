@@ -15,7 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class WebSecurityConfiguration {
 
     @Autowired
-    UserDataService userDataService;    
+    UserDataService userDataService;
 
     // @Autowired
     // BCryptPasswordEncoder passwordEncoder;
@@ -27,13 +27,14 @@ public class WebSecurityConfiguration {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
-            .authorizeRequests()
-            .antMatchers("api/register").permitAll()
-            .antMatchers("api/shutdown").permitAll()
-            .antMatchers("api/quizzes/**").hasAnyAuthority("User")
-            .anyRequest().authenticated()
-            .and()
-            .httpBasic();
+                .authorizeRequests()
+                .antMatchers("h2-console/**").permitAll()
+                .antMatchers("/api/register").permitAll()
+                .antMatchers("/actuator/shutdown").permitAll()
+                .antMatchers("/api/quizzes/**").hasAnyAuthority("User")
+                .anyRequest().authenticated()
+                .and()
+                .httpBasic();
 
         return http.build();
     }
