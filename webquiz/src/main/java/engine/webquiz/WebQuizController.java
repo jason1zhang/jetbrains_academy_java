@@ -1,6 +1,8 @@
 package engine.webquiz;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -12,9 +14,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
@@ -24,7 +26,13 @@ public class WebQuizController {
     private WebQuizService service;
 
     @Autowired
+    private CompletedQuizService completedQuizService;
+
+    @Autowired
     private UserRepository repository;
+
+    @Autowired
+    private CompletedQuizRepository completedQuizRep;
 
     @Autowired
     private PasswordEncoder encoder;
@@ -90,8 +98,18 @@ public class WebQuizController {
     }
 
     @GetMapping("api/quizzes")
-    public List<WebQuiz> getAllQuizes() {
-        return service.getAllQuizes();
+    public ResponseEntity<Page<WebQuiz>> getPagedQuizzes(@RequestParam(defaultValue = "0") Integer page,
+                                                         @RequestParam(defaultValue = "10") Integer size) {
+        Page<WebQuiz> paging = service.getPagedQuizzes(page, size);
+        return new ResponseEntity<>(paging, new HttpHeaders(), HttpStatus.OK);
+    }
+
+    @GetMapping("api/quizzes/completed")
+    public ResponseEntity<Page<CompletedQuiz>> getPagedCompletedQuizzes(@RequestParam(defaultValue = "0") Integer page,
+                                                                        @RequestParam(defaultValue = "10") Integer size) {
+        Page<CompletedQuiz> paging = completedQuizService.getPagedQuizzes(page, size, repository.findByEmail(getCurrentUser()));
+        return new ResponseEntity<>(paging, new HttpHeaders(), HttpStatus.OK);
+
     }
 
     @GetMapping("api/quizzes/{id}")
@@ -109,10 +127,23 @@ public class WebQuizController {
             ArrayList<Integer> correctAnswer = quiz.getAnswer();
             ArrayList<Integer> myAnswer = answer.get("answer");
 
-            if (correctAnswer == null && (myAnswer == null || myAnswer.size() == 0))
-                return ResponseEntity.ok(new WebQuizAnswer(true));
+            WebQuizAnswer webQuizAnswer = null;
+            if ((correctAnswer == null && (myAnswer == null || myAnswer.size() == 0))
+                    || myAnswer.equals(correctAnswer)) {
+                webQuizAnswer = new WebQuizAnswer(true);
+            } else {
+                webQuizAnswer = new WebQuizAnswer(false);
+            }
 
-            return ResponseEntity.ok(new WebQuizAnswer(myAnswer.equals(correctAnswer)));
+            if (webQuizAnswer.isSuccess()) {
+                CompletedQuiz completedQuiz = new CompletedQuiz();
+                completedQuiz.setId(id);
+                completedQuiz.setCompletedAt(LocalDateTime.now());
+                completedQuiz.setUser(repository.findByEmail(getCurrentUser()));
+                completedQuizRep.save(completedQuiz);
+            }
+
+            return ResponseEntity.ok(webQuizAnswer);
         }
     }
 }

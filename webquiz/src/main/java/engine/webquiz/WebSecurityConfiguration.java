@@ -28,10 +28,11 @@ public class WebSecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests()
-                .antMatchers("h2-console/**").permitAll()
+                .antMatchers("/h2-console/**").permitAll()
                 .antMatchers("/api/register").permitAll()
                 .antMatchers("/actuator/shutdown").permitAll()
                 .antMatchers("/api/quizzes/**").hasAnyAuthority("User")
+                .antMatchers("/api/quizzes/completed/**").hasAnyAuthority("User")
                 .anyRequest().authenticated()
                 .and()
                 .httpBasic();

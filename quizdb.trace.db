@@ -1,0 +1,42 @@
+2022-06-26 18:16:59 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table [*]user (user_id integer not null, email varchar(255), password varchar(255), primary key (user_id))"; expected "identifier"; SQL statement:
+create table user (user_id integer not null, email varchar(255), password varchar(255), primary key (user_id)) [42001-212]
+2022-06-26 18:16:59 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table completed_quiz add constraint FKrvuvf2ew682xc2m3vk72e7e84 foreign key (user_id) references [*]user"; expected "identifier"; SQL statement:
+alter table completed_quiz add constraint FKrvuvf2ew682xc2m3vk72e7e84 foreign key (user_id) references user [42001-212]
+2022-06-26 18:20:12 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table [*]user (user_id integer not null, email varchar(255), password varchar(255), primary key (user_id))"; expected "identifier"; SQL statement:
+create table user (user_id integer not null, email varchar(255), password varchar(255), primary key (user_id)) [42001-212]
+2022-06-26 18:20:12 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table completed_quiz add constraint FKrvuvf2ew682xc2m3vk72e7e84 foreign key (user_id) references [*]user"; expected "identifier"; SQL statement:
+alter table completed_quiz add constraint FKrvuvf2ew682xc2m3vk72e7e84 foreign key (user_id) references user [42001-212]
+2022-06-26 18:29:28 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table [*]user (user_id integer not null, email varchar(255), password varchar(255), primary key (user_id))"; expected "identifier"; SQL statement:
+create table user (user_id integer not null, email varchar(255), password varchar(255), primary key (user_id)) [42001-212]
+2022-06-26 18:29:28 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table completed_quiz add constraint FKrvuvf2ew682xc2m3vk72e7e84 foreign key (user_id) references [*]user"; expected "identifier"; SQL statement:
+alter table completed_quiz add constraint FKrvuvf2ew682xc2m3vk72e7e84 foreign key (user_id) references user [42001-212]
+2022-06-26 18:31:14 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "select user0_.user_id as user_id1_1_, user0_.email as email2_1_, user0_.password as password3_1_ from [*]user user0_ where user0_.email=?"; expected "identifier"; SQL statement:
+select user0_.user_id as user_id1_1_, user0_.email as email2_1_, user0_.password as password3_1_ from user user0_ where user0_.email=? [42001-212]
+2022-06-26 18:31:28 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "select user0_.user_id as user_id1_1_, user0_.email as email2_1_, user0_.password as password3_1_ from [*]user user0_ where user0_.email=?"; expected "identifier"; SQL statement:
+select user0_.user_id as user_id1_1_, user0_.email as email2_1_, user0_.password as password3_1_ from user user0_ where user0_.email=? [42001-212]
+2022-06-26 18:31:45 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table [*]user (user_id integer not null, email varchar(255), password varchar(255), primary key (user_id))"; expected "identifier"; SQL statement:
+create table user (user_id integer not null, email varchar(255), password varchar(255), primary key (user_id)) [42001-212]
+2022-06-26 18:31:46 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table completed_quiz add constraint FKrvuvf2ew682xc2m3vk72e7e84 foreign key (user_id) references [*]user"; expected "identifier"; SQL statement:
+alter table completed_quiz add constraint FKrvuvf2ew682xc2m3vk72e7e84 foreign key (user_id) references user [42001-212]
+2022-06-26 18:32:45 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "create table [*]user (user_id integer not null, email varchar(255), password varchar(255), primary key (user_id))"; expected "identifier"; SQL statement:
+create table user (user_id integer not null, email varchar(255), password varchar(255), primary key (user_id)) [42001-212]
+2022-06-26 18:32:45 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "alter table completed_quiz add constraint FKrvuvf2ew682xc2m3vk72e7e84 foreign key (user_id) references [*]user"; expected "identifier"; SQL statement:
+alter table completed_quiz add constraint FKrvuvf2ew682xc2m3vk72e7e84 foreign key (user_id) references user [42001-212]
+2022-06-26 18:32:58 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "select user0_.user_id as user_id1_1_, user0_.email as email2_1_, user0_.password as password3_1_ from [*]user user0_ where user0_.email=?"; expected "identifier"; SQL statement:
+select user0_.user_id as user_id1_1_, user0_.email as email2_1_, user0_.password as password3_1_ from user user0_ where user0_.email=? [42001-212]
+2022-06-26 18:33:06 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "select user0_.user_id as user_id1_1_, user0_.email as email2_1_, user0_.password as password3_1_ from [*]user user0_ where user0_.email=?"; expected "identifier"; SQL statement:
+select user0_.user_id as user_id1_1_, user0_.email as email2_1_, user0_.password as password3_1_ from user user0_ where user0_.email=? [42001-212]
